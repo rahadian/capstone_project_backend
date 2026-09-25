@@ -1,0 +1,83 @@
+name: nusantara_booking
+services:
+  nusantara_booking-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nusantara_booking-app
+    container_name: nusantara_booking-app
+    restart: unless-stopped
+    volumes:
+      - ./code:/var/www/html
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./php/php-fpm.conf:/usr/local/etc/php-fpm.d/php-fpm.conf
+    tty: true
+    environment:
+      SERVICE_NAME: nusantara_booking-app
+      SERVICE_TAGS: dev
+      HOME: /tmp
+    working_dir: /var/www/html
+    networks:
+      - nusantara_booking-network
+    depends_on:
+      - nusantara_booking-db
+  
+  nusantara_booking-worker:
+    image: nusantara_booking-app
+    container_name: nusantara_booking-worker
+    restart: unless-stopped
+    volumes:
+      - ./code:/var/www/html
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    environment:
+      SERVICE_NAME: nusantara_booking-worker
+      HOME: /tmp
+    working_dir: /var/www/html
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    networks:
+      - nusantara_booking-network
+    depends_on:
+      - nusantara_booking-db
+
+  nusantara_booking-db:
+    image: mysql:latest
+    container_name: nusantara_booking-db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 33068:3306
+    environment:
+      MYSQL_DATABASE: nusantara_booking_web
+      MYSQL_USER: nusantara_booking
+      MYSQL_PASSWORD: nusantara_booking123
+      MYSQL_ROOT_PASSWORD: adminnusantara_booking1337
+      MYSQL_BIND_ADDRESS: 0.0.0.0
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./mysql/init-scripts:/docker-entrypoint-initdb.d
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - nusantara_booking-network
+
+  nginx:
+    image: nginx:latest
+    container_name: nusantara_booking-nginx
+    restart: unless-stopped
+    tty: true
+    ports:
+      - '8555:80'
+    volumes:
+      - ./code:/var/www/html
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - nusantara_booking-network
+
+networks:
+  nusantara_booking-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
+
