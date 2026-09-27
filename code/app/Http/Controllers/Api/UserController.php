@@ -10,9 +10,22 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 Use App\Models\User;
+use OpenApi\Attributes as OA;
 
 class UserController extends Controller
 {
+    #[OA\Get(
+        path: '/api/users',
+        tags: ['Users'],
+        summary: 'Get User List',
+        security: [
+            'bearerAuth' => []
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'User List'),
+            new OA\Response(response: 401, description: 'Unauthenticated')
+        ]
+    )]
     /**
      * Display a listing of the resource.
      */
@@ -42,6 +55,89 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    #[OA\Post(
+        path: '/api/users',
+        summary: 'Create New User',
+        description: 'Create new user. Only can accessed by role owner.',
+        security: [['bearerAuth' => []]],
+        tags: ['Users'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'email', 'password', 'password_confirmation', 'role'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Budi Santoso'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 255, example: 'budi@example.com'),
+                    new OA\Property(property: 'password', type: 'string', format: 'password', minLength: 8, example: 'P@ssw0rd123!'),
+                    new OA\Property(property: 'password_confirmation', type: 'string', format: 'password', minLength: 8, example: 'P@ssw0rd123!'),
+                    new OA\Property(property: 'role', type: 'string', enum: ['admin', 'owner', 'tenant'], example: 'tenant')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'User berhasil dibuat',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'User created successfully'),
+                        new OA\Property(
+                            property: 'user',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                new OA\Property(property: 'name', type: 'string', example: 'Budi Santoso'),
+                                new OA\Property(property: 'email', type: 'string', example: 'budi@example.com'),
+                                new OA\Property(property: 'role', type: 'string', example: 'tenant'),
+                                new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2026-09-27T09:54:27.000000Z'),
+                                new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', example: '2026-09-27T09:54:27.000000Z')
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'error'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Token not valid.')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Forbidden',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthorized access')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Unprocessable Entity',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'The email has already been taken.'),
+                        new OA\Property(
+                            property: 'errors',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'email',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string', example: 'The email has already been taken.')
+                                )
+                            ]
+                        )
+                    ]
+                )
+            )
+        ]
+    )]
+
     public function store(Request $request)
     {
         $authUser = $request->user();
@@ -96,6 +192,107 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
+
+    #[OA\Put(
+        path: '/api/users/{id}',
+        summary: 'Update Data User',
+        description: 'Change or update data user based on ID. Only can accessed by role owner.',
+        security: [['bearerAuth' => []]],
+        tags: ['Users'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'User ID will be updated',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'email', 'password', 'password_confirmation', 'role'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Budi Santoso Updated'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 255, example: 'budi_new@example.com'),
+                    new OA\Property(property: 'password', type: 'string', format: 'password', minLength: 8, example: 'P@ssw0rdNew123!'),
+                    new OA\Property(property: 'password_confirmation', type: 'string', format: 'password', minLength: 8, example: 'P@ssw0rdNew123!'),
+                    new OA\Property(property: 'role', type: 'string', enum: ['admin', 'owner', 'tenant'], example: 'tenant')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User updated successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'User updated successfully'),
+                        new OA\Property(
+                            property: 'user',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                new OA\Property(property: 'name', type: 'string', example: 'Budi Santoso Updated'),
+                                new OA\Property(property: 'email', type: 'string', example: 'budi_new@example.com'),
+                                new OA\Property(property: 'role', type: 'string', example: 'tenant'),
+                                new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2026-09-27T09:54:27.000000Z'),
+                                new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', example: '2026-09-27T10:15:00.000000Z')
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'error'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Token not valid.')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Forbidden',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthorized access')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Not Found',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'No query results for model [App\\Models\\User] 1')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Unprocessable Entity',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'The email has already been taken.'),
+                        new OA\Property(
+                            property: 'errors',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'email',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string', example: 'The email has already been taken.')
+                                )
+                            ]
+                        )
+                    ]
+                )
+            )
+        ]
+    )]
     public function update(Request $request, string $id)
     {
         $authUser = $request->user();
@@ -106,7 +303,7 @@ class UserController extends Controller
 
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users,email,',
             'password' => ['required','string','confirmed',
                 Password::min(8)
                     ->letters()
@@ -135,6 +332,62 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+    #[OA\Delete(
+        path: '/api/users/{id}',
+        summary: 'Delete User',
+        description: 'Delete user data based on ID. Only can accessed by role owner.',
+        security: [['bearerAuth' => []]],
+        tags: ['Users'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'User ID will be deleted',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User deleted successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'User deleted successfully')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthenticated',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'error'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Token not valid.')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Forbidden',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthorized access')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Not Found',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'No query results for model [App\\Models\\User] 1')
+                    ]
+                )
+            )
+        ]
+    )]
+
     public function destroy(Request $request,string $id)
     {
         $authUser = $request->user();
