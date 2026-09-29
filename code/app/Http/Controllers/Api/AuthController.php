@@ -33,32 +33,31 @@ class AuthController extends Controller
     )]
     public function login(Request $request)
     {
-        $request->validate([
+        $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$token = auth('api')->attempt($credentials)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $user = auth('api')->user();
 
         return response()->json([
             'message'      => 'Login successfully',
             'access_token' => $token,
             'token_type'   => 'Bearer',
+            'expires_in'   => auth('api')->factory()->getTTL() * 60,
             'user'         => [
                 'id'    => $user->id,
                 'name'  => $user->name,
                 'email' => $user->email,
                 'role'  => $user->role,
             ]
-        ],200);
+        ], 200);
     }
 
     #[OA\Post(
@@ -76,7 +75,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        auth('api')->logout();
 
         return response()->json([
             'message' => 'Logout successful',
@@ -99,9 +98,21 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        if (!$request->user()) {
+        $user = auth('api')->user();
+        if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        return response()->json($request->user(),200);
+        return response()->json($user, 200);
+    }
+
+    public function refresh(Request $request)
+    {
+        $token = auth('api')->refresh();
+        return response()->json([
+            'message'      => 'Token refreshed successfully',
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'expires_in'   => auth('api')->factory()->getTTL() * 60,
+        ], 200);
     }
 }

@@ -18,9 +18,7 @@ class UserController extends Controller
         path: '/api/users',
         tags: ['Users'],
         summary: 'Get User List',
-        security: [
-            'bearerAuth' => []
-        ],
+        security: [['bearerAuth' => []]],
         responses: [
             new OA\Response(response: 200, description: 'User List'),
             new OA\Response(response: 401, description: 'Unauthenticated')
@@ -303,7 +301,7 @@ class UserController extends Controller
 
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
             'password' => ['required','string','confirmed',
                 Password::min(8)
                     ->letters()

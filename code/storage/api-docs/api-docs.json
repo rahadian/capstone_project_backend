@@ -588,6 +588,7 @@
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
+                "description": "Masukkan Token JWT hasil dari endpoint /api/login",
                 "name": "Authorization",
                 "in": "header",
                 "bearerFormat": "JWT",

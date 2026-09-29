@@ -15,7 +15,8 @@ use OpenApi\Attributes as OA;
     name: "Authorization",
     in: "header",
     scheme: "bearer",
-    bearerFormat: "JWT"
+    bearerFormat: "JWT",
+    description: "Masukkan Token JWT hasil dari endpoint /api/login"
 )]
 
 
