@@ -83,6 +83,266 @@
                 }
             }
         },
+        "/api/units": {
+            "get": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Get List of Units",
+                "description": "Display a listing of the resource.",
+                "operationId": "a3a1d66f44ebf06140c9341243a80f23",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "available",
+                                "rented",
+                                "maintenance"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit List Fetched Successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Create New Unit",
+                "description": "Create new unit. Only accessible by role owner or admin.",
+                "operationId": "65b4d4d103fb1f53cdc4a461dee43432",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "address",
+                                    "price"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Unit A1 - Deluxe Room"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Jl. Raya Bromo No. 12, Surabaya"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 350000
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "available",
+                                        "enum": [
+                                            "available",
+                                            "rented",
+                                            "maintenance"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Unit created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/units/{id}": {
+            "get": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Get Detail Unit",
+                "description": "Display the specified resource.",
+                "operationId": "55a3b12db53a9c08a7a8ee66cadac8aa",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit Detail Fetched"
+                    },
+                    "404": {
+                        "description": "Unit Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Update Unit",
+                "description": "Update unit data. Only accessible by unit owner or admin.",
+                "operationId": "58d790464a1e2565120c9e6ec6014aca",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "address",
+                                    "price",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Unit A1 - Deluxe Room (Renovated)"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Jl. Raya Bromo No. 12, Probolinggo"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 400000
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "available",
+                                        "enum": [
+                                            "available",
+                                            "rented",
+                                            "maintenance"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Unit updated successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Unit Not Found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Delete Unit",
+                "description": "Delete unit data. Only accessible by unit owner or admin.",
+                "operationId": "d06f5db24a3460c4f3d22569ee3f6a3e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit deleted successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Unit Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users": {
             "get": {
                 "tags": [
@@ -99,9 +359,11 @@
                         "description": "Unauthenticated"
                     }
                 },
-                "security": {
-                    "bearerAuth": {}
-                }
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -600,6 +862,10 @@
         {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Units",
+            "description": "Units"
         },
         {
             "name": "Users",
