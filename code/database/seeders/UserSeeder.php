@@ -13,12 +13,12 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Admin Nusantara Booking',
-            'email' => 'admin@admin.com',
-            'password' => bcrypt('admin123'),
-            'role' => 'admin',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'Admin Nusantara Booking',
+        //     'email' => 'admin@admin.com',
+        //     'password' => bcrypt('admin123'),
+        //     'role' => 'admin',
+        // ]);
 
         User::factory()->create([
             'name' => 'Owner Nusantara Booking',
@@ -27,11 +27,11 @@ class UserSeeder extends Seeder
             'role' => 'owner',
         ]);
 
-        User::factory()->create([
-            'name' => 'Tenant Nusantara Booking',
-            'email' => 'tenant@tenant.com',
-            'password' => bcrypt('tenant123'),
-            'role' => 'tenant',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'Tenant Nusantara Booking',
+        //     'email' => 'tenant@tenant.com',
+        //     'password' => bcrypt('tenant123'),
+        //     'role' => 'tenant',
+        // ]);
     }
 }

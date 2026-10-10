@@ -6,6 +6,84 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User Registration",
+                "description": "Register a new user (Owner or Tenant). If role is tenant, a tenant profile record is automatically created.",
+                "operationId": "8e4e3cb7b46126f4696379d3c7eeb4ad",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Budi Santoso",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "budi@example.com",
+                                        "maxLength": 255
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "081234567890",
+                                        "maxLength": 20
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "P@ssw0rd123!",
+                                        "minLength": 8
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "P@ssw0rd123!",
+                                        "minLength": 8
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "example": "tenant",
+                                        "enum": [
+                                            "owner",
+                                            "tenant"
+                                        ]
+                                    },
+                                    "id_card": {
+                                        "description": "File KTP (JPG, JPEG, PNG, PDF max 2MB). Only for tenant role.",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration Successful"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                }
+            }
+        },
         "/api/login": {
             "post": {
                 "tags": [
@@ -134,7 +212,7 @@
                     "Units"
                 ],
                 "summary": "Create New Unit",
-                "description": "Create new unit. Only accessible by role owner or admin.",
+                "description": "Create new unit. Only accessible by role owner.",
                 "operationId": "65b4d4d103fb1f53cdc4a461dee43432",
                 "requestBody": {
                     "required": true,
@@ -234,7 +312,7 @@
                     "Units"
                 ],
                 "summary": "Update Unit",
-                "description": "Update unit data. Only accessible by unit owner or admin.",
+                "description": "Update unit data. Only accessible by unit owner.",
                 "operationId": "58d790464a1e2565120c9e6ec6014aca",
                 "parameters": [
                     {
@@ -312,7 +390,7 @@
                     "Units"
                 ],
                 "summary": "Delete Unit",
-                "description": "Delete unit data. Only accessible by unit owner or admin.",
+                "description": "Delete unit data. Only accessible by unit owner.",
                 "operationId": "d06f5db24a3460c4f3d22569ee3f6a3e",
                 "parameters": [
                     {
@@ -343,213 +421,13 @@
                 ]
             }
         },
-        "/api/users": {
-            "get": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Get User List",
-                "description": "Display a listing of the resource.",
-                "operationId": "566aed8efb436ca506e0ef51a032ecd9",
-                "responses": {
-                    "200": {
-                        "description": "User List"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "post": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Create New User",
-                "description": "Create new user. Only can accessed by role owner.",
-                "operationId": "be551c1d694a01c164966f58bfa77013",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "email",
-                                    "password",
-                                    "password_confirmation",
-                                    "role"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Budi Santoso",
-                                        "maxLength": 255
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "budi@example.com",
-                                        "maxLength": 255
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "P@ssw0rd123!",
-                                        "minLength": 8
-                                    },
-                                    "password_confirmation": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "P@ssw0rd123!",
-                                        "minLength": 8
-                                    },
-                                    "role": {
-                                        "type": "string",
-                                        "example": "tenant",
-                                        "enum": [
-                                            "admin",
-                                            "owner",
-                                            "tenant"
-                                        ]
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "User berhasil dibuat",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "User created successfully"
-                                        },
-                                        "user": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Budi Santoso"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "budi@example.com"
-                                                },
-                                                "role": {
-                                                    "type": "string",
-                                                    "example": "tenant"
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-09-27T09:54:27.000000Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-09-27T09:54:27.000000Z"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Token not valid."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthorized access"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The email has already been taken."
-                                        },
-                                        "errors": {
-                                            "properties": {
-                                                "email": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The email has already been taken."
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/users/{id}": {
             "put": {
                 "tags": [
                     "Users"
                 ],
                 "summary": "Update Data User",
-                "description": "Change or update data user based on ID. Only can accessed by role owner.",
+                "description": "Change or update data user based on ID.",
                 "operationId": "070e37fc9aff78ae73860751bc990ed3",
                 "parameters": [
                     {
@@ -599,14 +477,10 @@
                                         "example": "P@ssw0rdNew123!",
                                         "minLength": 8
                                     },
-                                    "role": {
+                                    "phone": {
                                         "type": "string",
-                                        "example": "tenant",
-                                        "enum": [
-                                            "admin",
-                                            "owner",
-                                            "tenant"
-                                        ]
+                                        "example": "081234567890",
+                                        "maxLength": 20
                                     }
                                 },
                                 "type": "object"
@@ -639,9 +513,9 @@
                                                     "type": "string",
                                                     "example": "budi_new@example.com"
                                                 },
-                                                "role": {
+                                                "phone": {
                                                     "type": "string",
-                                                    "example": "tenant"
+                                                    "example": "081234567890"
                                                 },
                                                 "created_at": {
                                                     "type": "string",
@@ -735,101 +609,6 @@
                                                 }
                                             },
                                             "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Delete User",
-                "description": "Delete user data based on ID. Only can accessed by role owner.",
-                "operationId": "0b4133ed462528a5e648b88ead11e929",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "User ID will be deleted",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User deleted successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "User deleted successfully"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Token not valid."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthorized access"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "No query results for model [App\\Models\\User] 1"
                                         }
                                     },
                                     "type": "object"

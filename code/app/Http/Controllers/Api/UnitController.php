@@ -30,12 +30,11 @@ class UnitController extends Controller
     {
         $authUser = $request->user();
         $query = Unit::with('owner:id,name,email');
-        
+
 
         // Note:
         // Owner: Automatically filter by unit they have
         // Tenant: Default only visible unit which has status 'available'
-        // Admin: Visible all
         if($authUser->role === 'owner'){
             $query->where('owner_id',$authUser->id);
         }elseif($authUser->role === 'tenant'){
@@ -66,7 +65,7 @@ class UnitController extends Controller
     #[OA\Post(
         path: '/api/units',
         summary: 'Create New Unit',
-        description: 'Create new unit. Only accessible by role owner or admin.',
+        description: 'Create new unit. Only accessible by role owner.',
         security: [['bearerAuth' => []]],
         tags: ['Units'],
         requestBody: new OA\RequestBody(
@@ -92,7 +91,7 @@ class UnitController extends Controller
     {
         $authUser = $request->user();
 
-        if (!in_array($authUser->role,['owner','admin'])){
+        if (!in_array($authUser->role,['owner'])){
             return response()->json(['message'=>'Unauthorized access'],403);
         }
 
@@ -154,7 +153,7 @@ class UnitController extends Controller
     #[OA\Put(
         path: '/api/units/{id}',
         summary: 'Update Unit',
-        description: 'Update unit data. Only accessible by unit owner or admin.',
+        description: 'Update unit data. Only accessible by unit owner.',
         security: [['bearerAuth' => []]],
         tags: ['Units'],
         parameters: [
@@ -184,8 +183,8 @@ class UnitController extends Controller
         $authUser = $request->user();
         $unit = Unit::findOrFail($id);
 
-        // Hanya Admin atau Owner pemilik unit yang bisa mengedit
-        if ($authUser->role !== 'admin' && $unit->owner_id !== $authUser->id) {
+        // Only Owner can edit their own unit
+        if ($unit->owner_id !== $authUser->id) {
             return response()->json(['message' => 'Unauthorized access'], 403);
         }
 
@@ -210,7 +209,7 @@ class UnitController extends Controller
     #[OA\Delete(
         path: '/api/units/{id}',
         summary: 'Delete Unit',
-        description: 'Delete unit data. Only accessible by unit owner or admin.',
+        description: 'Delete unit data. Only accessible by unit owner.',
         security: [['bearerAuth' => []]],
         tags: ['Units'],
         parameters: [
@@ -227,8 +226,8 @@ class UnitController extends Controller
         $authUser = $request->user();
         $unit = Unit::findOrFail($id);
 
-        // Hanya Admin atau Owner pemilik unit yang bisa menghapus
-        if ($authUser->role !== 'admin' && $unit->owner_id !== $authUser->id) {
+        // Only Owner can delete their own unit
+        if ($unit->owner_id !== $authUser->id) {
             return response()->json(['message' => 'Unauthorized access'], 403);
         }
 
