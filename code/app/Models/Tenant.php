@@ -27,4 +27,9 @@ class Tenant extends Model
         return $this->belongsTo(User::class,'user_id');
     }
 
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(Contract::class, 'tenant_id');
+    }
+
 }

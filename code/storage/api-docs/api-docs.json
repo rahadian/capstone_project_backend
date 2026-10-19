@@ -161,6 +161,187 @@
                 }
             }
         },
+        "/api/contracts": {
+            "get": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Get Contract List",
+                "description": "Get list of contracts. Tenant sees their own contracts, Owner sees contracts for their units.",
+                "operationId": "971f1fdec41a8eaf0830d94e9ee15496",
+                "responses": {
+                    "200": {
+                        "description": "Contract List Fetched"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Create Contract Proposal",
+                "description": "Tenant submits a new rental contract proposal for a unit.",
+                "operationId": "73a91076ec6423051d986a4149fa8d87",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "unit_id",
+                                    "start_date",
+                                    "end_date",
+                                    "total_price"
+                                ],
+                                "properties": {
+                                    "unit_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-01"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2027-11-01"
+                                    },
+                                    "total_price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15000000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Contract Created"
+                    },
+                    "403": {
+                        "description": "Forbidden - Only Tenant can create contract"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/contracts/{id}": {
+            "get": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Get Detail Contract",
+                "description": "Get detail contract by ID. Accessible by related Tenant or Owner.",
+                "operationId": "9445ed7aeeb30a8907fad6500bd937a9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contract Detail Fetched"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Contract Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Update Contract Status",
+                "description": "Update contract status (e.g. active, cancelled, completed). Accessible by Owner.",
+                "operationId": "deec88ded603a5d2d90d86d4106f9242",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "pending",
+                                            "active",
+                                            "completed",
+                                            "cancelled"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Contract Status Updated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Contract Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/units": {
             "get": {
                 "tags": [
@@ -641,6 +822,10 @@
         {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Contracts",
+            "description": "Contracts"
         },
         {
             "name": "Units",

@@ -29,4 +29,9 @@ class Unit extends Model
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
+
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(Contract::class, 'unit_id');
+    }
 }
