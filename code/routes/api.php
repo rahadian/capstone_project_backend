@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\ContractController;
+use App\Http\Controllers\Api\PaymentController;
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
@@ -20,4 +21,6 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('units', UnitController::class);
 
     Route::apiResource('contracts', ContractController::class);
+
+    Route::apiResource('payments', PaymentController::class);
 });

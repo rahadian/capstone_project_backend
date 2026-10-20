@@ -342,6 +342,186 @@
                 ]
             }
         },
+        "/api/payments": {
+            "get": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Get Payment List",
+                "description": "Get list of payments. Tenant sees their own payments, Owner sees payments for their units.",
+                "operationId": "afcbc19a07bf33c2fcb73b5c438b476c",
+                "responses": {
+                    "200": {
+                        "description": "Payment List Fetched"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Submit Payment Proof",
+                "description": "Tenant uploads payment proof for a contract month.",
+                "operationId": "985b848b4cb6ca6115cf4ea71e314c0c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "contract_id",
+                                    "month",
+                                    "amount",
+                                    "proof"
+                                ],
+                                "properties": {
+                                    "contract_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "month": {
+                                        "description": "Format YYYY-MM",
+                                        "type": "string",
+                                        "example": "2026-10"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1500000
+                                    },
+                                    "proof": {
+                                        "description": "File bukti bayar (JPG, PNG, PDF max 2MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Payment Submitted"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/payments/{id}": {
+            "get": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Get Detail Payment",
+                "description": "Get detail payment by ID.",
+                "operationId": "33da95d13a42b4c3898427d7cb9516a8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment Detail Fetched"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Payment Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Verify Payment",
+                "description": "Owner verifies or rejects a payment.",
+                "operationId": "4e85438414b16b3c35ad3776c5ccc11f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "paid",
+                                        "enum": [
+                                            "pending",
+                                            "paid",
+                                            "rejected"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment Status Updated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Payment Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/units": {
             "get": {
                 "tags": [
@@ -826,6 +1006,10 @@
         {
             "name": "Contracts",
             "description": "Contracts"
+        },
+        {
+            "name": "Payments",
+            "description": "Payments"
         },
         {
             "name": "Units",
