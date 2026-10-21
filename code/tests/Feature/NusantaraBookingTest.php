@@ -1,0 +1,190 @@
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+use App\Models\Contract;
+use App\Models\Payment;
+use App\Models\Tenant;
+use App\Models\Unit;
+use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+
+class NusantaraBookingTest extends TestCase
+{
+    /**
+     * A basic feature test example.
+     */
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('public'); //mock storage for file uploads
+    }
+
+    public function test_tenant_can_register_successfully_with_id_card(){
+        $idCardFile  = UploadedFile::fake()->image('id_card.jpg', 600, 400);
+
+        $response = $this->postJson('/api/register', [
+            'name' => 'Tenant User',
+            'email' => 'tenant@example.com',
+            'phone' => '081234567890',
+            'password' => 'P@ssw0rd123!',
+            'password_confirmation' => 'P@ssw0rd123!',
+            'role' => 'tenant',
+            'id_card' => $idCardFile,
+            'ktp_data_json' => json_encode([
+                'nik' => '1234567890123456',
+                'nama' => 'Tenant User',
+                'tempat_lahir' => 'Jakarta',
+                'tanggal_lahir' => '1990-01-01',
+                'jenis_kelamin' => 'Laki-laki',
+                'alamat' => 'Jl. Contoh Alamat No. 123, Jakarta'
+            ]),
+        ]);
+
+        $response->assertStatus(201)
+        ->assertJsonStructure([
+            'message',
+            'access_token',
+                'token_type',
+                'expires_in',
+                'user' => ['id', 'name', 'email', 'role', 'tenant']
+            ]);
+       $this->assertDatabaseHas('users', ['email' => 'tenant@example.com', 'role' => 'tenant']);
+       $this->assertDatabaseHas('tenants', ['name' => 'Tenant User', 'phone' => '081234567890']);
+    }
+
+    public function test_owner_can_create_unit()
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+
+        $response = $this->actingAs($owner, 'api')
+            ->postJson('/api/units', [
+                'name'        => 'Apartemen Studio 01',
+                'address'     => 'Jl. Contoh Alamat No. 456, Jakarta',
+                'price'       => 2000000,
+                'status'      => 'available',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonFragment(['name' => 'Apartemen Studio 01']);
+
+        $this->assertDatabaseHas('units', [
+            'owner_id' => $owner->id,
+            'name'     => 'Apartemen Studio 01',
+        ]);
+    }
+
+    public function test_tenant_can_propose_contract_and_owner_can_activate_it()
+    {
+        // 1. Setup Data
+        $owner = User::factory()->create(['role' => 'owner']);
+        $unit = Unit::create([
+            'owner_id'    => $owner->id,
+            'name'        => 'Kosan A1',
+            'address'     => 'Jl. Contoh Alamat No. 789, Jakarta',
+            'price'       => 1000000,
+            'status'      => 'available',
+        ]);
+
+        $tenantUser = User::factory()->create(['role' => 'tenant']);
+        $tenant = Tenant::create([
+            'user_id' => $tenantUser->id,
+            'name'    => 'Calon Tenant',
+            'phone'   => '08999999999',
+        ]);
+
+        // 2. Tenant ajukan kontrak
+        $contractResponse = $this->actingAs($tenantUser, 'api')
+            ->postJson('/api/contracts', [
+                'unit_id'     => $unit->id,
+                'start_date'  => now()->format('Y-m-d'),
+                'end_date'    => now()->addYear()->format('Y-m-d'),
+                'total_price' => 24000000,
+            ]);
+
+        $contractResponse->assertStatus(201);
+        $contractId = $contractResponse->json('contract.id');
+
+        $this->assertDatabaseHas('contracts', [
+            'id'        => $contractId,
+            'tenant_id' => $tenant->id,
+            'status'    => 'pending',
+        ]);
+
+        // 3. Owner setujui/aktifkan kontrak
+        $updateResponse = $this->actingAs($owner, 'api')
+            ->putJson("/api/contracts/{$contractId}", [
+                'status' => 'active',
+            ]);
+
+        $updateResponse->assertStatus(200);
+
+        // Pastikan status kontrak jadi active dan status unit otomatis jadi rented
+        $this->assertDatabaseHas('contracts', ['id' => $contractId, 'status' => 'active']);
+        $this->assertDatabaseHas('units', ['id' => $unit->id, 'status' => 'rented']);
+    }
+
+    public function test_tenant_can_upload_payment_proof_and_owner_can_verify()
+    {
+        // 1. Setup Data
+        $owner = User::factory()->create(['role' => 'owner']);
+        $unit = Unit::create([
+            'owner_id'    => $owner->id,
+            'name'        => 'Kosan B2',
+            'address'     => 'Jl. Contoh Alamat No. 789, Jakarta',
+            'price'       => 1500000,
+            'status'      => 'rented',
+        ]);
+
+        $tenantUser = User::factory()->create(['role' => 'tenant']);
+        $tenant = Tenant::create([
+            'user_id' => $tenantUser->id,
+            'name'    => 'Tenant Bayar',
+            'phone'   => '08888888888',
+        ]);
+
+        $contract = Contract::create([
+            'unit_id'     => $unit->id,
+            'tenant_id'   => $tenant->id,
+            'start_date'  => now()->format('Y-m-d'),
+            'end_date'    => now()->addYear()->format('Y-m-d'),
+            'total_price' => 18000000,
+            'status'      => 'active',
+        ]);
+
+        // 2. Tenant upload bukti bayar
+        $proofFile = UploadedFile::fake()->image('bukti_tf.jpg', 800, 600);
+
+        $paymentResponse = $this->actingAs($tenantUser, 'api')
+            ->postJson('/api/payments', [
+                'contract_id' => $contract->id,
+                'month'       => '2026-11',
+                'amount'      => 2000000,
+                'proof'       => $proofFile,
+            ]);
+
+        $paymentResponse->assertStatus(201);
+        $paymentId = $paymentResponse->json('payment.id');
+
+        $this->assertDatabaseHas('payments', [
+            'id'     => $paymentId,
+            'month'  => '2026-11',
+            'status' => 'pending',
+        ]);
+
+        // 3. Owner verifikasi pembayaran
+        $verifyResponse = $this->actingAs($owner, 'api')
+            ->putJson("/api/payments/{$paymentId}", [
+                'status' => 'paid',
+            ]);
+
+        $verifyResponse->assertStatus(200);
+        $this->assertDatabaseHas('payments', ['id' => $paymentId, 'status' => 'paid']);
+    }
+}
