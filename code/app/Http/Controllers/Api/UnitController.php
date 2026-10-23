@@ -51,6 +51,33 @@ class UnitController extends Controller
         return response()->json($units,200);
     }
 
+     #[OA\Get(
+        path: '/api/list/units',
+        summary: 'Get List of Units Without Login',
+        tags: ['Units'],
+        parameters: [
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['available', 'rented', 'maintenance']))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Unit List Fetched Successfully'),
+        ]
+    )]
+
+    public function list_nologin(Request $request)
+    {
+        $query = Unit::with('owner:id,name,email');
+
+        if($request->has('status')){
+            $query->where('status', $request->query('status'));
+        }
+
+        $limit = $request->input('limit',10);
+        $units = $query->paginate($limit);
+
+        return response()->json($units,200);
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -135,6 +162,25 @@ class UnitController extends Controller
     public function show(string $id)
     {
         $unit = Unit::with('owner:id,name,email')->findOrFail($id);
+
+        return response()->json($unit, 200);
+    }
+
+    #[OA\Get(
+        path: '/api/detail/unit/{id}',
+        summary: 'Get Detail Unit Without Login',
+        tags: ['Units'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Unit Detail Fetched'),
+            new OA\Response(response: 404, description: 'Unit Not Found')
+        ]
+    )]
+    public function show_nologin(string $id)
+    {
+        $unit = Unit::findOrFail($id);
 
         return response()->json($unit, 200);
     }

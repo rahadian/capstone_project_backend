@@ -635,6 +635,44 @@
                 ]
             }
         },
+        "/api/list/units": {
+            "get": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Get List of Units Without Login",
+                "operationId": "8ddd402d4a508947058f60999e194458",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "available",
+                                "rented",
+                                "maintenance"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit List Fetched Successfully"
+                    }
+                }
+            }
+        },
         "/api/units/{id}": {
             "get": {
                 "tags": [
@@ -780,6 +818,34 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/detail/unit/{id}": {
+            "get": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Get Detail Unit Without Login",
+                "operationId": "e353ab5acd856c2e56e1326943c253c1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit Detail Fetched"
+                    },
+                    "404": {
+                        "description": "Unit Not Found"
+                    }
+                }
             }
         },
         "/api/users/{id}": {

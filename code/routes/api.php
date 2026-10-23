@@ -24,3 +24,6 @@ Route::middleware('auth:api')->group(function () {
 
     Route::apiResource('payments', PaymentController::class);
 });
+
+Route::get('list/units', [UnitController::class, 'list_nologin']);
+Route::get('detail/unit/{unit}', [UnitController::class, 'show_nologin']);
