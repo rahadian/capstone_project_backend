@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Unit;
 use OpenApi\Attributes as OA;
 
@@ -107,6 +108,19 @@ class UnitController extends Controller
                 required: ['name', 'address', 'price'],
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Unit A1 - Deluxe Room'),
+                    new OA\Property(property: 'type', type: 'string', example: 'Rumah Kontrakan'),
+                    new OA\Property(
+                        property: 'facilities',
+                        type: 'array',
+                        items: new OA\Items(type: 'string'),
+                        example: ['AC', 'WiFi', 'Kamar Mandi Dalam']
+                    ),
+                    new OA\Property(
+                            property: 'image',
+                            description: 'Image Unit (JPG, JPEG, PNG, max 2MB).',
+                            type: 'string',
+                            format: 'binary'
+                    ),
                     new OA\Property(property: 'address', type: 'string', example: 'Jl. Raya Bromo No. 12, Surabaya'),
                     new OA\Property(property: 'price', type: 'number', format: 'float', example: 350000.00),
                     new OA\Property(property: 'status', type: 'string', enum: ['available', 'rented', 'maintenance'], example: 'available')
@@ -130,14 +144,27 @@ class UnitController extends Controller
 
         $validatedData = $request->validate([
             'name'    => 'required|string|max:255',
+            'type'    => 'required|string|max:100',
+            'facilities'   => 'nullable|array',
+            'facilities.*' => 'string',
+            'image'   => 'nullable|file|mimes:jpeg,png,jpg,webp|max:2048',
             'address' => 'required|string',
             'price'   => 'required|numeric|min:0',
             'status'  => 'nullable|string|in:available,rented,maintenance',
         ]);
 
+        $imgUrl = null;
+
+        $path = $request->file('image')->store('unit_image', 'public');
+        $imgUrl = Storage::disk('public')->url($path);
+
+
         $unit = Unit::create([
             'owner_id' => $authUser->id,
             'name'     => $validatedData['name'],
+            'type'     => $validatedData['type'],
+            'facilities' => $validatedData['facilities'] ?? [],
+            'image'    => $imgUrl,
             'address'  => $validatedData['address'],
             'price'    => $validatedData['price'],
             'status'   => $validatedData['status'] ?? 'available',
@@ -216,9 +243,22 @@ class UnitController extends Controller
             content: new OA\JsonContent(
                 required: ['name', 'address', 'price', 'status'],
                 properties: [
-                    new OA\Property(property: 'name', type: 'string', example: 'Unit A1 - Deluxe Room (Renovated)'),
-                    new OA\Property(property: 'address', type: 'string', example: 'Jl. Raya Bromo No. 12, Probolinggo'),
-                    new OA\Property(property: 'price', type: 'number', format: 'float', example: 400000.00),
+                    new OA\Property(property: 'name', type: 'string', example: 'Unit A1 - Deluxe Room'),
+                    new OA\Property(property: 'type', type: 'string', example: 'Rumah Kontrakan'),
+                    new OA\Property(
+                        property: 'facilities',
+                        type: 'array',
+                        items: new OA\Items(type: 'string'),
+                        example: ['AC', 'WiFi', 'Kamar Mandi Dalam']
+                    ),
+                    new OA\Property(
+                            property: 'image',
+                            description: 'Image Unit (JPG, JPEG, PNG, max 2MB).',
+                            type: 'string',
+                            format: 'binary'
+                    ),
+                    new OA\Property(property: 'address', type: 'string', example: 'Jl. Raya Bromo No. 12, Surabaya'),
+                    new OA\Property(property: 'price', type: 'number', format: 'float', example: 350000.00),
                     new OA\Property(property: 'status', type: 'string', enum: ['available', 'rented', 'maintenance'], example: 'available')
                 ]
             )
@@ -242,10 +282,28 @@ class UnitController extends Controller
 
         $validatedData = $request->validate([
             'name'    => 'required|string|max:255',
+            'type'    => 'required|string|max:100',
+            'facilities'   => 'nullable|array',
+            'facilities.*' => 'string',
+            'image'   => 'nullable|file|mimes:jpeg,png,jpg,webp|max:2048',
             'address' => 'required|string',
             'price'   => 'required|numeric|min:0',
             'status'  => 'required|string|in:available,rented,maintenance',
         ]);
+
+        if ($request->hasFile('image')) {
+            // Hapus gambar lama jika ada
+            if ($unit->image) {
+                $oldPath = str_replace(Storage::disk('public')->url(''), '', $unit->image);
+                Storage::disk('public')->delete($oldPath);
+            }
+
+            $path = $request->file('image')->store('unit_image', 'public');
+            $validatedData['image'] = Storage::disk('public')->url($path);
+        } else {
+            // Gunakan gambar yang sudah ada
+            unset($validatedData['image']);
+        }
 
         $unit->update($validatedData);
 

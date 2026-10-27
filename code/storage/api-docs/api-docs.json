@@ -590,6 +590,26 @@
                                         "type": "string",
                                         "example": "Unit A1 - Deluxe Room"
                                     },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "Rumah Kontrakan"
+                                    },
+                                    "facilities": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "AC",
+                                            "WiFi",
+                                            "Kamar Mandi Dalam"
+                                        ]
+                                    },
+                                    "image": {
+                                        "description": "Image Unit (JPG, JPEG, PNG, max 2MB).",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
                                     "address": {
                                         "type": "string",
                                         "example": "Jl. Raya Bromo No. 12, Surabaya"
@@ -739,16 +759,36 @@
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "Unit A1 - Deluxe Room (Renovated)"
+                                        "example": "Unit A1 - Deluxe Room"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "Rumah Kontrakan"
+                                    },
+                                    "facilities": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "AC",
+                                            "WiFi",
+                                            "Kamar Mandi Dalam"
+                                        ]
+                                    },
+                                    "image": {
+                                        "description": "Image Unit (JPG, JPEG, PNG, max 2MB).",
+                                        "type": "string",
+                                        "format": "binary"
                                     },
                                     "address": {
                                         "type": "string",
-                                        "example": "Jl. Raya Bromo No. 12, Probolinggo"
+                                        "example": "Jl. Raya Bromo No. 12, Surabaya"
                                     },
                                     "price": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": 400000
+                                        "example": 350000
                                     },
                                     "status": {
                                         "type": "string",

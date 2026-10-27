@@ -62,10 +62,14 @@ class NusantaraBookingTest extends TestCase
     public function test_owner_can_create_unit()
     {
         $owner = User::factory()->create(['role' => 'owner']);
+        $imageFile = UploadedFile::fake()->image('unit_photo.jpg', 800, 600);
 
         $response = $this->actingAs($owner, 'api')
             ->postJson('/api/units', [
                 'name'        => 'Apartemen Studio 01',
+                'type'        => 'Kamar Kos',
+                'facilities'  => ['AC', 'WiFi', 'Kamar Mandi Dalam'],
+                'image'       => $imageFile,
                 'address'     => 'Jl. Contoh Alamat No. 456, Jakarta',
                 'price'       => 2000000,
                 'status'      => 'available',
@@ -238,5 +242,72 @@ class NusantaraBookingTest extends TestCase
             ->assertJsonFragment(['name' => 'Unit Ready'])
             ->assertJsonFragment(['name' => 'Unit Tersewa'])
             ->assertJsonFragment(['name' => 'Unit Perbaikan']);
+    }
+
+    public function test_unit_includes_type_facilities_image_and_booked_dates()
+    {
+        $owner = User::create([
+            'name'     => 'Owner Properti Detail',
+            'email'    => 'ownerdetail@example.com',
+            'password' => bcrypt('P@ssw0rd123!'),
+            'role'     => 'owner',
+        ]);
+
+        // Mock fake image upload
+        $imageFile = UploadedFile::fake()->image('unit_photo.jpg', 800, 600);
+
+        // 1. Tes Create Unit dengan File Upload Gambar + Field Baru
+        $response = $this->actingAs($owner, 'api')
+            ->postJson('/api/units', [
+                'name'        => 'Kosan Exclusive A1',
+                'type'        => 'Kamar Kos',
+                'facilities'  => ['AC', 'WiFi', 'Kamar Mandi Dalam'],
+                'image'       => $imageFile,
+                'address'     => 'Jl. Raya Bromo No. 12, Probolinggo',
+                'price'       => 1500000,
+                'status'      => 'available',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'unit' => ['id', 'type', 'facilities', 'image', 'booked_dates']
+            ])
+            ->assertJsonFragment([
+                'type'       => 'Kamar Kos',
+                'facilities' => ['AC', 'WiFi', 'Kamar Mandi Dalam'],
+            ]);
+
+        // Ambil ID dari unit yang baru dibuat
+        $unitId = $response->json('unit.id');
+
+        // Pastikan file gambar tersimpan di fake storage disk
+        $this->assertNotNull($response->json('unit.image'));
+
+        // 2. Simulasikan kontrak aktif
+        $tenantUser = User::create([
+            'name'     => 'Tenant Booked',
+            'email'    => 'tenantbooked@example.com',
+            'password' => bcrypt('P@ssw0rd123!'),
+            'role'     => 'tenant',
+        ]);
+        $tenant = Tenant::create(['user_id' => $tenantUser->id, 'name' => 'Tenant Booked', 'phone' => '08123456']);
+
+        Contract::create([
+            'unit_id'     => $unitId,
+            'tenant_id'   => $tenant->id,
+            'start_date'  => '2026-11-01',
+            'end_date'    => '2026-11-03',
+            'total_price' => 4500000,
+            'status'      => 'active',
+        ]);
+
+        // 3. Tes Response Detail Publik
+        $detailResponse = $this->getJson("/api/detail/unit/{$unitId}");
+
+        $detailResponse->assertStatus(200)
+            ->assertJsonStructure(['type', 'facilities', 'image', 'booked_dates'])
+            ->assertJsonFragment([
+                'booked_dates' => ['2026-11-01', '2026-11-02', '2026-11-03']
+            ]);
     }
 }
