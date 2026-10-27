@@ -57,7 +57,7 @@ class UnitController extends Controller
         tags: ['Units'],
         parameters: [
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10)),
-            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['available', 'rented', 'maintenance']))
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['all','available', 'rented', 'maintenance']))
         ],
         responses: [
             new OA\Response(response: 200, description: 'Unit List Fetched Successfully'),
