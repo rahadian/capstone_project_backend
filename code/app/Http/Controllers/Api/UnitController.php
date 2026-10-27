@@ -68,8 +68,14 @@ class UnitController extends Controller
     {
         $query = Unit::with('owner:id,name,email');
 
-        if($request->has('status')){
-            $query->where('status', $request->query('status'));
+        $status = $request->input('status');
+
+        if ($status==='all'){
+
+        }else if($status){
+            $query->where('status',$status);
+        }else{
+            $query->where('status','available');
         }
 
         $limit = $request->input('limit',10);

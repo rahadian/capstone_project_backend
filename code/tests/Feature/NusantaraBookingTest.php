@@ -187,4 +187,56 @@ class NusantaraBookingTest extends TestCase
         $verifyResponse->assertStatus(200);
         $this->assertDatabaseHas('payments', ['id' => $paymentId, 'status' => 'paid']);
     }
+
+    public function test_public_catalog_only_shows_available_units_by_default()
+    {
+        // 1. Setup User Owner
+        $owner = User::create([
+            'name'     => 'Owner Properti Catalog',
+            'email'    => 'ownercatalog@example.com',
+            'password' => bcrypt('P@ssw0rd123!'),
+            'role'     => 'owner',
+        ]);
+
+        // 2. Buat 3 unit dengan status berbeda
+        $unitAvailable = Unit::create([
+            'owner_id'    => $owner->id,
+            'name'        => 'Unit Ready',
+            'address'     => 'Jl. Contoh Alamat No. 789, Jakarta',
+            'price'       => 1500000,
+            'status'      => 'available',
+        ]);
+
+        $unitRented = Unit::create([
+            'owner_id'    => $owner->id,
+            'name'        => 'Unit Tersewa',
+            'address'     => 'Jl. Contoh Alamat No. 789, Jakarta',
+            'price'       => 1500000,
+            'status'      => 'rented',
+        ]);
+
+        $unitMaintenance = Unit::create([
+            'owner_id'    => $owner->id,
+            'name'        => 'Unit Perbaikan',
+            'address'     => 'Jl. Contoh Alamat No. 789, Jakarta',
+            'price'       => 1500000,
+            'status'      => 'maintenance',
+        ]);
+
+        // 3. Hit endpoint publik TANPA parameter status
+        $response = $this->getJson('/api/list/units');
+
+        $response->assertStatus(200)
+            ->assertJsonFragment(['name' => 'Unit Ready'])
+            ->assertJsonMissing(['name' => 'Unit Tersewa'])
+            ->assertJsonMissing(['name' => 'Unit Perbaikan']);
+
+        // 4. Hit endpoint publik DENGAN parameter ?status=all (opsional/opsi 1)
+        $responseAll = $this->getJson('/api/list/units?status=all');
+
+        $responseAll->assertStatus(200)
+            ->assertJsonFragment(['name' => 'Unit Ready'])
+            ->assertJsonFragment(['name' => 'Unit Tersewa'])
+            ->assertJsonFragment(['name' => 'Unit Perbaikan']);
+    }
 }
