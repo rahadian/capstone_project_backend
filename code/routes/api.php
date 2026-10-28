@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UnitBlockController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\UserController;
@@ -17,6 +18,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/refresh', [AuthController::class, 'refresh']);
 
     Route::apiResource('users', UserController::class);
+
+    Route::apiResource('tenants', TenantController::class);
 
     Route::get('units/{unit}/blocks', [UnitBlockController::class, 'index']);
     Route::post('units/{unit}/blocks', [UnitBlockController::class, 'store']);
