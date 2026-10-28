@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\Unit;
+use App\Support\BillReport;
+use App\Support\Csv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use OpenApi\Attributes as OA;
@@ -64,6 +66,64 @@ class ContractController extends Controller
         $contract = $query->paginate($limit);
 
         return response()->json($contract, 200);
+    }
+
+    #[OA\Get(
+        path: '/api/contracts/export',
+        summary: 'Export Contract Report as CSV',
+        description: 'Download contract report as CSV for all statuses of contracts on the owner units.',
+        security: [['bearerAuth' => []]],
+        tags: ['Contracts'],
+        responses: [
+            new OA\Response(response: 200, description: 'CSV downloaded', content: [
+                new OA\MediaType(mediaType: 'text/csv'),
+            ]),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 403, description: 'Unauthorized access'),
+        ]
+    )]
+    public function export(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'owner') {
+            return response()->json(['message' => 'Unauthorized access'], 403);
+        }
+
+        $contracts = Contract::with(['unit.owner:id,name', 'tenant'])
+            ->whereHas('unit', fn ($q) => $q->where('owner_id', $user->id))
+            ->orderBy('id')
+            ->get();
+
+        $labels = [
+            'pending' => 'Menunggu',
+            'active' => 'Aktif',
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+        ];
+
+        $rows = $contracts->map(function (Contract $contract) use ($labels) {
+            $months = BillReport::months($contract->start_date->toDateString(), $contract->end_date->toDateString());
+
+            return [
+                $contract->id,
+                $contract->tenant?->name,
+                $contract->unit?->name,
+                $contract->unit?->owner?->name,
+                $contract->start_date->format('Y-m-d'),
+                $contract->end_date->format('Y-m-d'),
+                "{$months} bulan",
+                BillReport::monthly((float) $contract->total_price, $months),
+                (int) round((float) $contract->total_price),
+                $labels[$contract->status] ?? $contract->status,
+            ];
+        });
+
+        return Csv::download(
+            'laporan-kontrak-'.now()->format('Ymd').'.csv',
+            ['ID', 'Penyewa', 'Unit', 'Pemilik', 'Mulai', 'Selesai', 'Durasi', 'Harga per Bulan', 'Nilai Kontrak', 'Status'],
+            $rows,
+        );
     }
 
     #[OA\Post(
