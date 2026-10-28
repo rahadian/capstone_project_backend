@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContractController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UnitBlockController;
@@ -33,6 +34,10 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('payments/export', [PaymentController::class, 'export']);
     Route::apiResource('payments', PaymentController::class);
+
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead']);
 });
 
 Route::get('list/units', [UnitController::class, 'list_nologin']);
