@@ -97,6 +97,22 @@ class BillReportTest extends TestCase
         $this->assertSame(['2026-09', '2026-10'], $months);
     }
 
+    public function test_month_keys_stop_at_tail_month(): void
+    {
+        $this->assertSame(
+            ['2026-11', '2026-12', '2027-01'],
+            BillReport::monthKeys('2026-11-15', '2027-02-14'),
+        );
+    }
+
+    public function test_month_keys_follow_month_end_dates(): void
+    {
+        $this->assertSame(
+            ['2026-01', '2026-02', '2026-03', '2026-04'],
+            BillReport::monthKeys('2026-01-31', '2026-05-31'),
+        );
+    }
+
     public function test_filename_and_upload_time_are_formatted(): void
     {
         $contract = $this->contract('2026-09-01', '2027-02-28');

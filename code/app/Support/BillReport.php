@@ -29,15 +29,28 @@ class BillReport
     }
 
     /**
+     * @return list<string>
+     */
+    public static function monthKeys(string $from, string $until): array
+    {
+        $count = min(self::months($from, $until), 120);
+        $start = Carbon::parse($from)->startOfMonth();
+
+        return array_map(
+            fn (int $offset) => $start->copy()->addMonthsNoOverflow($offset)->format('Y-m'),
+            range(0, $count - 1),
+        );
+    }
+
+    /**
      * @return list<array{month: string, amount: int, status: string, proof: string, uploaded: string}>
      */
     public static function rows(Contract $contract, CarbonInterface $now): array
     {
-        $months = min(
+        $fee = self::monthly(
+            (float) $contract->total_price,
             self::months($contract->start_date->toDateString(), $contract->end_date->toDateString()),
-            120,
         );
-        $fee = self::monthly((float) $contract->total_price, $months);
 
         $latest = [];
         foreach ($contract->payments as $payment) {
@@ -48,16 +61,13 @@ class BillReport
         }
 
         $rows = [];
-        $start = $contract->start_date->copy()->startOfMonth();
         $limit = Carbon::parse($now)->startOfMonth();
 
-        for ($i = 0; $i < $months; $i++) {
-            $month = $start->copy()->addMonthsNoOverflow($i);
-            if ($month->gt($limit)) {
+        foreach (self::monthKeys($contract->start_date->toDateString(), $contract->end_date->toDateString()) as $key) {
+            if (Carbon::parse("{$key}-01")->gt($limit)) {
                 break;
             }
 
-            $key = $month->format('Y-m');
             $payment = $latest[$key] ?? null;
 
             $rows[] = [

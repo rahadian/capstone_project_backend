@@ -124,39 +124,54 @@ class PaymentController extends Controller
 
     #[OA\Post(
         path: '/api/payments',
-        summary: 'Submit Payment Proof',
-        description: 'Tenant uploads payment proof for a contract month.',
+        summary: 'Submit Payment',
+        description: 'Tenant uploads payment proof, or Owner records a manual payment for a billed month.',
         security: [['bearerAuth' => []]],
         tags: ['Payments'],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\MediaType(
-                mediaType: 'multipart/form-data',
-                schema: new OA\Schema(
-                    required: ['contract_id', 'month', 'amount', 'proof'],
+            content: [
+                new OA\JsonContent(
+                    required: ['contract_id', 'month', 'amount'],
                     properties: [
                         new OA\Property(property: 'contract_id', type: 'integer', example: 1),
                         new OA\Property(property: 'month', type: 'string', example: '2026-10', description: 'Format YYYY-MM'),
                         new OA\Property(property: 'amount', type: 'number', format: 'float', example: 1500000),
-                        new OA\Property(
-                            property: 'proof',
-                            description: 'File bukti bayar (JPG, PNG, PDF max 2MB)',
-                            type: 'string',
-                            format: 'binary'
-                        ),
                     ]
-                )
-            )
+                ),
+                new OA\MediaType(
+                    mediaType: 'multipart/form-data',
+                    schema: new OA\Schema(
+                        required: ['contract_id', 'month', 'amount', 'proof'],
+                        properties: [
+                            new OA\Property(property: 'contract_id', type: 'integer', example: 1),
+                            new OA\Property(property: 'month', type: 'string', example: '2026-10', description: 'Format YYYY-MM'),
+                            new OA\Property(property: 'amount', type: 'number', format: 'float', example: 1500000),
+                            new OA\Property(
+                                property: 'proof',
+                                description: 'File bukti bayar (JPG, PNG, PDF max 2MB)',
+                                type: 'string',
+                                format: 'binary'
+                            ),
+                        ]
+                    )
+                ),
+            ]
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Payment Submitted'),
+            new OA\Response(response: 201, description: 'Payment Recorded'),
             new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 409, description: 'Month already has a payment'),
             new OA\Response(response: 422, description: 'Validation Error'),
         ]
     )]
     public function store(Request $request)
     {
         $user = $request->user();
+
+        if ($user->role === 'owner') {
+            return $this->recordManual($request);
+        }
 
         if ($user->role !== 'tenant') {
             return response()->json(['message' => 'Hanya tenant yang dapat mengunggah bukti pembayaran.'], 403);
@@ -195,6 +210,59 @@ class PaymentController extends Controller
 
         return response()->json([
             'message' => 'Bukti pembayaran berhasil diunggah.',
+            'payment' => $payment->load('contract.unit'),
+        ], 201);
+    }
+
+    private function recordManual(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'contract_id' => 'required|exists:contracts,id',
+            'month' => ['required', 'string', 'regex:/^\d{4}-\d{2}$/'],
+            'amount' => 'required|numeric|min:0.01',
+        ]);
+
+        $contract = Contract::with('unit')->findOrFail($validated['contract_id']);
+
+        if ($contract->unit->owner_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized access'], 403);
+        }
+
+        $months = BillReport::monthKeys(
+            $contract->start_date->toDateString(),
+            $contract->end_date->toDateString(),
+        );
+
+        if (! in_array($validated['month'], $months, true)) {
+            return response()->json(['message' => 'Bulan tidak termasuk masa tagihan kontrak.'], 422);
+        }
+
+        if ($validated['month'] > now()->format('Y-m')) {
+            return response()->json(['message' => 'Bulan tagihan belum berjalan.'], 422);
+        }
+
+        $latest = $contract->payments()
+            ->where('month', $validated['month'])
+            ->orderByDesc('id')
+            ->first();
+
+        if ($latest && in_array($latest->status, ['paid', 'pending'], true)) {
+            return response()->json(['message' => 'Bulan ini sudah memiliki pembayaran.'], 409);
+        }
+
+        $payment = Payment::create([
+            'contract_id' => $contract->id,
+            'month' => $validated['month'],
+            'amount' => $validated['amount'],
+            'status' => 'paid',
+            'proof_url' => null,
+            'recorded_by' => $user->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Pembayaran berhasil dicatat.',
             'payment' => $payment->load('contract.unit'),
         ], 201);
     }
