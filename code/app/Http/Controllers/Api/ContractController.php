@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
+use App\Models\Tenant;
 use App\Models\Unit;
 use App\Support\BillReport;
 use App\Support\Csv;
@@ -36,13 +37,13 @@ class ContractController extends Controller
                 return response()->json(['message' => 'Profil tenant tidak ditemukan.'], 404);
             }
 
-            $query = Contract::with(['unit.owner:id,name,email', 'payments'])
+            $query = Contract::with(['unit.owner:id,name,email', 'tenant:id,name,user_id,ktp_status', 'payments'])
                 ->where('tenant_id', $tenant->id)
                 ->latest();
                 // ->paginate($limit);
 
         } else if ($user->role === 'owner') {
-            $query = Contract::with(['unit', 'tenant.user:id,email', 'payments'])
+            $query = Contract::with(['unit', 'tenant:id,name,user_id,ktp_status', 'tenant.user:id,email', 'payments'])
                 ->whereHas('unit', function ($query) use ($user) {
                     $query->where('owner_id', $user->id);
                 })
@@ -129,7 +130,7 @@ class ContractController extends Controller
     #[OA\Post(
         path: '/api/contracts',
         summary: 'Create Contract Proposal',
-        description: 'Tenant submits a new rental contract proposal for a unit.',
+        description: 'Tenant submits a rental proposal for a unit, or Owner creates a contract for a managed tenant.',
         security: [['bearerAuth' => []]],
         tags: ['Contracts'],
         requestBody: new OA\RequestBody(
@@ -138,6 +139,7 @@ class ContractController extends Controller
                 required: ['unit_id', 'start_date', 'end_date', 'total_price'],
                 properties: [
                     new OA\Property(property: 'unit_id', type: 'integer', example: 1),
+                    new OA\Property(property: 'tenant_id', type: 'integer', description: 'Required for owner role', example: 1),
                     new OA\Property(property: 'start_date', type: 'string', format: 'date', example: '2026-11-01'),
                     new OA\Property(property: 'end_date', type: 'string', format: 'date', example: '2027-11-01'),
                     new OA\Property(property: 'total_price', type: 'number', format: 'float', example: 15000000)
@@ -146,49 +148,65 @@ class ContractController extends Controller
         ),
         responses: [
             new OA\Response(response: 201, description: 'Contract Created'),
-            new OA\Response(response: 403, description: 'Forbidden - Only Tenant can create contract'),
-            new OA\Response(response: 422, description: 'Validation Error')
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 422, description: 'Validation Error or date range already booked')
         ]
     )]
     public function store(Request $request)
     {
         $user = $request->user();
 
-        if ($user->role !== 'tenant') {
-            return response()->json(['message' => 'Hanya tenant yang dapat membuat pengajuan kontrak.'], 403);
+        if (! in_array($user->role, ['tenant', 'owner'], true)) {
+            return response()->json(['message' => 'Unauthorized access'], 403);
         }
 
-        $tenant = $user->tenant;
-        if (!$tenant) {
-            return response()->json(['message' => 'Profil tenant belum lengkap.'], 400);
-        }
-
-        $validated = $request->validate([
+        $rules = [
             'unit_id'     => 'required|exists:units,id',
             'start_date'  => 'required|date|after_or_equal:today',
             'end_date'    => 'required|date|after:start_date',
             'total_price' => 'required|numeric|min:0',
-        ]);
+        ];
 
-        // Cek ketersediaan unit
-        $unit = Unit::findOrFail($validated['unit_id']);
-        if ($unit->status !== 'available') {
-            return response()->json(['message' => 'Unit sedang tidak tersedia untuk disewa.'], 400);
+        if ($user->role === 'owner') {
+            $rules['tenant_id'] = 'required|exists:tenants,id';
         }
 
-        $contract = DB::transaction(function () use ($validated, $tenant) {
-            return Contract::create([
-                'unit_id'     => $validated['unit_id'],
-                'tenant_id'   => $tenant->id,
-                'start_date'  => $validated['start_date'],
-                'end_date'    => $validated['end_date'],
-                'total_price' => $validated['total_price'],
-                'status'      => 'pending',
-            ]);
-        });
+        $validated = $request->validate($rules);
+        $unit = Unit::findOrFail($validated['unit_id']);
+
+        if ($user->role === 'owner') {
+            if ($unit->owner_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized access'], 403);
+            }
+
+            $tenant = Tenant::findOrFail($validated['tenant_id']);
+            if ($tenant->owner_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized access'], 403);
+            }
+        } else {
+            $tenant = $user->tenant;
+            if (! $tenant) {
+                return response()->json(['message' => 'Profil tenant belum lengkap.'], 400);
+            }
+        }
+
+        if ($unit->hasOverlap($validated['start_date'], $validated['end_date'])) {
+            return response()->json(['message' => 'Tanggal yang dipilih sudah terisi atau diblokir.'], 422);
+        }
+
+        $contract = Contract::create([
+            'unit_id'     => $validated['unit_id'],
+            'tenant_id'   => $tenant->id,
+            'start_date'  => $validated['start_date'],
+            'end_date'    => $validated['end_date'],
+            'total_price' => $validated['total_price'],
+            'status'      => 'pending',
+        ]);
 
         return response()->json([
-            'message'  => 'Pengajuan kontrak berhasil dibuat.',
+            'message'  => $user->role === 'owner'
+                ? 'Kontrak berhasil dibuat.'
+                : 'Pengajuan kontrak berhasil dibuat.',
             'contract' => $contract->load(['unit', 'tenant'])
         ], 201);
     }
@@ -273,11 +291,19 @@ class ContractController extends Controller
             'status' => 'required|string|in:pending,active,completed,cancelled',
         ]);
 
+        if ($validated['status'] === 'active' && $contract->unit->hasOverlap(
+            $contract->start_date->toDateString(),
+            $contract->end_date->toDateString(),
+            $contract->id,
+        )) {
+            return response()->json(['message' => 'Tanggal yang dipilih sudah terisi atau diblokir.'], 422);
+        }
+
         DB::transaction(function () use ($contract, $validated) {
             $contract->update(['status' => $validated['status']]);
 
-            // Jika status kontrak diaktifkan, ubah status unit jadi rented
-            if ($validated['status'] === 'active') {
+            // Unit hanya ditandai terisi bila masa sewa sudah berjalan
+            if ($validated['status'] === 'active' && $contract->start_date->lte(today())) {
                 $contract->unit->update(['status' => 'rented']);
             }
             // Jika kontrak selesai atau dibatalkan, kembalikan status unit jadi available
