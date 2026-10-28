@@ -28,7 +28,7 @@ class Unit extends Model
         'facilities' => 'array',
     ];
 
-    protected $appends = ['booked_dates'];
+    protected $appends = ['booked_dates', 'blocked_dates'];
 
     /**
      * Get the owner of the unit.
@@ -43,23 +43,64 @@ class Unit extends Model
         return $this->hasMany(Contract::class, 'unit_id');
     }
 
+    public function blocks(): HasMany
+    {
+        return $this->hasMany(UnitBlock::class, 'unit_id');
+    }
+
+    public function hasOverlap(string $start, string $end, ?int $ignoreContractId = null): bool
+    {
+        $contractOverlap = $this->contracts()
+            ->where('status', 'active')
+            ->when($ignoreContractId, fn ($query) => $query->whereKeyNot($ignoreContractId))
+            ->where('start_date', '<=', $end)
+            ->where('end_date', '>=', $start)
+            ->exists();
+
+        return $contractOverlap || $this->blocks()
+            ->where('start_date', '<=', $end)
+            ->where('end_date', '>=', $start)
+            ->exists();
+    }
+
     public function getBookedDatesAttribute(): array
     {
-        $activeContracts = $this->contracts()
-            ->where('status','active')
-            ->get(['start_date','end_date']);
+        $dates = $this->datesBetween(
+            $this->contracts()->where('status', 'active')->get(['start_date', 'end_date'])
+        );
 
-        $bookedDates=[];
+        return $this->sortDates(array_merge(
+            $dates,
+            $this->getBlockedDatesAttribute()
+        ));
+    }
 
-        foreach ($activeContracts as $contract){
-            if($contract->start_date && $contract->end_date){
-                $period = CarbonPeriod::create($contract->start_date, $contract->end_date);
-                foreach($period as $date){
-                    $bookedDates[] = $date->format('Y-m-d');
+    public function getBlockedDatesAttribute(): array
+    {
+        return $this->sortDates($this->datesBetween($this->blocks()->get(['start_date', 'end_date'])));
+    }
+
+    private function datesBetween(iterable $ranges): array
+    {
+        $dates = [];
+
+        foreach ($ranges as $range) {
+            if ($range->start_date && $range->end_date) {
+                $period = CarbonPeriod::create($range->start_date, $range->end_date);
+                foreach ($period as $date) {
+                    $dates[] = $date->format('Y-m-d');
                 }
             }
         }
 
-        return array_values(array_unique($bookedDates));
+        return $dates;
+    }
+
+    private function sortDates(array $dates): array
+    {
+        $dates = array_values(array_unique($dates));
+        sort($dates);
+
+        return $dates;
     }
 }

@@ -320,6 +320,55 @@ class UnitController extends Controller
     }
 
     /**
+     * Update only the availability status of a unit.
+     */
+    #[OA\Patch(
+        path: '/api/units/{id}/status',
+        summary: 'Update Unit Status',
+        description: 'Update unit availability status. Only accessible by unit owner.',
+        security: [['bearerAuth' => []]],
+        tags: ['Units'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['status'],
+                properties: [
+                    new OA\Property(property: 'status', type: 'string', enum: ['available', 'rented', 'maintenance'], example: 'maintenance')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Unit status updated successfully'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Unit Not Found'),
+            new OA\Response(response: 422, description: 'Validation error')
+        ]
+    )]
+    public function updateStatus(Request $request, string $id)
+    {
+        $authUser = $request->user();
+        $unit = Unit::findOrFail($id);
+
+        if ($unit->owner_id !== $authUser->id) {
+            return response()->json(['message' => 'Unauthorized access'], 403);
+        }
+
+        $validatedData = $request->validate([
+            'status' => 'required|string|in:available,rented,maintenance',
+        ]);
+
+        $unit->update(['status' => $validatedData['status']]);
+
+        return response()->json([
+            'message' => 'Status unit berhasil diperbarui.',
+            'unit' => $unit->load('owner:id,name,email'),
+        ], 200);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     #[OA\Delete(

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\UnitBlockController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/refresh', [AuthController::class, 'refresh']);
 
     Route::apiResource('users', UserController::class);
+
+    Route::get('units/{unit}/blocks', [UnitBlockController::class, 'index']);
+    Route::post('units/{unit}/blocks', [UnitBlockController::class, 'store']);
+    Route::delete('units/{unit}/blocks/{block}', [UnitBlockController::class, 'destroy']);
+    Route::patch('units/{id}/status', [UnitController::class, 'updateStatus']);
 
     Route::apiResource('units', UnitController::class);
 
