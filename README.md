@@ -111,6 +111,7 @@ This project includes a `Makefile` to avoid typing long `docker compose exec` co
 | `make migrate-fresh` | Drop all tables and re-run migrations |
 | `make migrate-fresh-seed` | Reset DB, re-run migrations, and run seeders |
 | `make seed` | Run database seeders |
+| `make seed-uji` | Run database uji deployment seeders |
 | `make cache-clear` | Clear config, route, view, and application cache |
 | `make artisan ARGS="<command>"` | Run custom Artisan command (e.g., `make artisan ARGS="route:list"`) |
 
@@ -158,3 +159,36 @@ This project includes a `Makefile` to avoid typing long `docker compose exec` co
 
 2. **Port Conflicts:**
    If ports `8555` or `33068` are already occupied on your host machine, modify the port mapping under the `ports:` section in `docker-compose.yml`.
+
+## 🧪 Account & Data FOR DEPLYOMENT TEST
+
+For application flow verification needed in the deployment environment, already have *seeder* which contains data test for **Owner**, **Tenant**, **Unit**, **Contract**, and **Payment**.
+
+### 1. Account Credential
+* **Owner**: `uji.deploy.20261028@example.com` / `P@ssw0rd123!`
+* **Tenant**: `tenant.uji@example.com` / `P@ssw0rd123!`
+
+---
+
+### 2. Scenarion Data Test
+
+#### **A. Unit**
+* **Nama**: Unit Uji Surabaya A1
+* **Tipe**: Kamar Kos
+* **Status**: `rented`
+* **Fasilitas**: AC, WiFi, Kamar Mandi Dalam
+
+#### **B. Contract (`/api/contracts`)**
+1. **Active (`active`)**: Periode `2026-10-01` until `2027-09-30` (For testing data payment & calendar `booked_dates`).
+2. **Completed (`completed`)**: Periode `2026-01-11` until `2026-03-30`.
+3. **Terminated (`terminated`)**: Periode `2026-05-01` until `2026-06-30`.
+
+#### **C. Payment (`/api/payments`)**
+1. **Bulan 2026-10**: Status **`paid`** (Lunas / Terverifikasi).
+2. **Bulan 2026-11**: Status **`pending`** (Menunggu verifikasi Owner).
+3. **Bulan 2026-05**: Status **`failed`** (Pembayaran ditolak / gagal).
+
+---
+
+### 3. Run Seeder
+Run `make seed-uji` 

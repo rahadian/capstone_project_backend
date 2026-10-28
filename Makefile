@@ -22,6 +22,7 @@ help:
 	@echo "  make migrate-fresh     Drop all tables and re-run migrations"
 	@echo "  make migrate-fresh-seed Drop all tables, re-run migrations and seed"
 	@echo "  make seed              Run database seeders"
+	@echo "  make seed-uji          Run database uji deployment seeders"
 	@echo "  make cache-clear       Clear Laravel caches"
 	@echo "  make composer-install  Install PHP dependencies"
 	@echo "  make npm-install       Install Node dependencies"
@@ -75,8 +76,8 @@ migrate-fresh-seed:
 seed:
 	$(COMPOSE) exec -T $(APP_SERVICE) php artisan db:seed
 
-seed-region:
-	$(COMPOSE) exec -T $(APP_SERVICE) php artisan db:seed --class=RegionUserSeeder
+seed-uji:
+	$(COMPOSE) exec -T $(APP_SERVICE) php artisan db:seed --class=UjiDeploySeeder
 
 cache-clear:
 	$(COMPOSE) exec -T $(APP_SERVICE) php artisan cache:clear && $(COMPOSE) exec -T $(APP_SERVICE) php artisan config:clear && $(COMPOSE) exec -T $(APP_SERVICE) php artisan route:clear && $(COMPOSE) exec -T $(APP_SERVICE) php artisan view:clear

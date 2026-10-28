@@ -27,30 +27,43 @@ class ContractController extends Controller
         $user = $request->user();
         $limit = $request->input('limit', 10);
 
+
         if ($user->role === 'tenant') {
             $tenant = $user->tenant;
             if (!$tenant) {
                 return response()->json(['message' => 'Profil tenant tidak ditemukan.'], 404);
             }
 
-            $contracts = Contract::with(['unit.owner:id,name,email', 'payments'])
+            $query = Contract::with(['unit.owner:id,name,email', 'payments'])
                 ->where('tenant_id', $tenant->id)
-                ->latest()
-                ->paginate($limit);
+                ->latest();
+                // ->paginate($limit);
 
         } else if ($user->role === 'owner') {
-            $contracts = Contract::with(['unit', 'tenant.user:id,email', 'payments'])
+            $query = Contract::with(['unit', 'tenant.user:id,email', 'payments'])
                 ->whereHas('unit', function ($query) use ($user) {
                     $query->where('owner_id', $user->id);
                 })
-                ->latest()
-                ->paginate($limit);
+                ->latest();
+                // ->paginate($limit);
 
         } else {
             return response()->json(['message' => 'Unauthorized access'], 403);
         }
 
-        return response()->json($contracts, 200);
+        $status = $request->input('status');
+
+        if ($status==='all'){
+
+        }else if($status){
+            $query->where('status',$status);
+        }else{
+            $query->where('status','active');
+        }
+        $limit = $request->input('limit',10);
+        $contract = $query->paginate($limit);
+
+        return response()->json($contract, 200);
     }
 
     #[OA\Post(
