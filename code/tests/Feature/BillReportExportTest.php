@@ -218,6 +218,18 @@ class BillReportExportTest extends TestCase
         $this->assertStringNotContainsString('Kos Selesai', $content);
     }
 
+    public function test_formula_like_names_are_prefixed_with_quote(): void
+    {
+        $owner = $this->owner();
+        $unit = $this->unit($owner, '=1+1');
+        [, $tenant] = $this->tenant('@SUM(A1)');
+        $this->contract($unit, $tenant, '2026-09-01', '2027-02-28', 15000000);
+
+        $rows = $this->csvRows($this->download($owner));
+
+        $this->assertStringContainsString("'=1+1;'@SUM(A1);2500000;Belum Bayar;;", $rows[1]);
+    }
+
     public function test_owner_receives_all_rows_without_pagination(): void
     {
         $owner = $this->owner();
