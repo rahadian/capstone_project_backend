@@ -255,8 +255,14 @@ class DemoSeedTest extends TestCase
                 $this->assertSame($contract->unit->price, (float) $payment->amount);
             }
 
-            $months = $contract->start_date->diffInMonths($contract->end_date) + 1;
-            $this->assertSame($contract->unit->price * $months, (float) $contract->total_price);
+            /* `end_date` adalah hari pertama bulan setelah masa sewa berakhir,
+               dan frontend menghitung bulan sewa dari selisih itu (`hitungBulanSewa`).
+               Nilai kontrak wajib sama dengan harga bulanan unit dikali jumlah bulan
+               tersebut — kalau tidak, layar menampilkan harga per bulan yang bukan
+               harga unit (mis. Rp 927.273 untuk unit Rp 850.000). */
+            $months = (int) $contract->start_date->diffInMonths($contract->end_date);
+            $this->assertSame((float) ($contract->unit->price * $months), (float) $contract->total_price);
+            $this->assertSame((float) $contract->unit->price, round($contract->total_price / $months));
         }
     }
 

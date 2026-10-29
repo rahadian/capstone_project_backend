@@ -156,7 +156,11 @@ class DemoSeeder extends Seeder
                 ],
                 [
                     'end_date' => $end->toDateString(),
-                    'total_price' => $units[$slug]->price * ($endOffset - $startOffset + 1),
+                    /* `end_date` jatuh di hari pertama bulan sesudah masa sewa, jadi
+                       jumlah bulannya = selisih offset. Menambah 1 membuat harga
+                       bulanan hasil bagi (total / bulan) tidak sama dengan harga
+                       unit — frontend menampilkan angka itu apa adanya. */
+                    'total_price' => $units[$slug]->price * ($endOffset - $startOffset),
                     'status' => $status,
                 ]
             );
