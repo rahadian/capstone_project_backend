@@ -188,7 +188,7 @@
                     "Contracts"
                 ],
                 "summary": "Create Contract Proposal",
-                "description": "Tenant submits a new rental contract proposal for a unit.",
+                "description": "Tenant submits a rental proposal for a unit, or Owner creates a contract for a managed tenant.",
                 "operationId": "73a91076ec6423051d986a4149fa8d87",
                 "requestBody": {
                     "required": true,
@@ -203,6 +203,11 @@
                                 ],
                                 "properties": {
                                     "unit_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "tenant_id": {
+                                        "description": "Required for owner role",
                                         "type": "integer",
                                         "example": 1
                                     },
@@ -232,10 +237,39 @@
                         "description": "Contract Created"
                     },
                     "403": {
-                        "description": "Forbidden - Only Tenant can create contract"
+                        "description": "Forbidden"
                     },
                     "422": {
-                        "description": "Validation Error"
+                        "description": "Validation Error or date range already booked"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/contracts/export": {
+            "get": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Export Contract Report as CSV",
+                "description": "Download contract report as CSV for all statuses of contracts on the owner units.",
+                "operationId": "6d194ee78fda359dbfb7d520287f3215",
+                "responses": {
+                    "200": {
+                        "description": "CSV downloaded",
+                        "content": {
+                            "text/csv": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Unauthorized access"
                     }
                 },
                 "security": [
@@ -342,6 +376,80 @@
                 ]
             }
         },
+        "/api/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "List Latest In-App Notifications",
+                "operationId": "6d56a555955089a73fdf3f7229e8ead8",
+                "responses": {
+                    "200": {
+                        "description": "Notification List Fetched"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/{id}/read": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark One Notification as Read",
+                "operationId": "2fe71b0978a9ffec443177e4bae1e622",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Notification Marked as Read"
+                    },
+                    "404": {
+                        "description": "Notification Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/read-all": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark All Notifications as Read",
+                "operationId": "a938b29776d5df701355702f21a24149",
+                "responses": {
+                    "204": {
+                        "description": "All Notifications Marked as Read"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/payments": {
             "get": {
                 "tags": [
@@ -368,8 +476,8 @@
                 "tags": [
                     "Payments"
                 ],
-                "summary": "Submit Payment Proof",
-                "description": "Tenant uploads payment proof for a contract month.",
+                "summary": "Submit Payment",
+                "description": "Tenant uploads payment proof, or Owner records a manual payment for a billed month.",
                 "operationId": "985b848b4cb6ca6115cf4ea71e314c0c",
                 "requestBody": {
                     "required": true,
@@ -405,18 +513,76 @@
                                 },
                                 "type": "object"
                             }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "contract_id",
+                                    "month",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "contract_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "month": {
+                                        "description": "Format YYYY-MM",
+                                        "type": "string",
+                                        "example": "2026-10"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1500000
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "Payment Submitted"
+                        "description": "Payment Recorded"
                     },
                     "403": {
                         "description": "Forbidden"
                     },
+                    "409": {
+                        "description": "Month already has a payment"
+                    },
                     "422": {
                         "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/payments/export": {
+            "get": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Export Bill Report as CSV",
+                "description": "Download monthly bill report as CSV. Tenant receives active contracts of their own, Owner receives active contracts on their units, including unpaid months.",
+                "operationId": "6ecbbc7315eb97a787373210008418a5",
+                "responses": {
+                    "200": {
+                        "description": "CSV downloaded",
+                        "content": {
+                            "text/csv": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Unauthorized access"
                     }
                 },
                 "security": [
@@ -513,6 +679,333 @@
                     },
                     "404": {
                         "description": "Payment Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/tenants": {
+            "get": {
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "List Tenants Managed by Owner",
+                "description": "Owner-created tenants plus tenants with contracts on the owner units.",
+                "operationId": "f310322b0ca24e43e52d3ebcd9194c6a",
+                "responses": {
+                    "200": {
+                        "description": "Tenant List Fetched Successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Create Tenant Without Account",
+                "operationId": "c876e741906b74d0d03cc254cf9966de",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Budi Santoso"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "628123456789"
+                                    },
+                                    "ktp_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "unverified",
+                                            "pending",
+                                            "verified"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tenant Created Successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/tenants/{tenant}": {
+            "put": {
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Update Tenant",
+                "operationId": "052a96cf003e4dca6b616536e91bc836",
+                "parameters": [
+                    {
+                        "name": "tenant",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Budi Santoso"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "628123456789"
+                                    },
+                                    "ktp_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "unverified",
+                                            "pending",
+                                            "verified"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tenant Updated Successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Tenant Not Found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Delete Tenant",
+                "description": "Only tenants created by the owner and without contracts can be deleted.",
+                "operationId": "50e3ff70e4080dd3ac9f90db1650da66",
+                "parameters": [
+                    {
+                        "name": "tenant",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Tenant Deleted Successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Tenant Not Found"
+                    },
+                    "409": {
+                        "description": "Tenant still has contracts"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/units/{unit}/blocks": {
+            "get": {
+                "tags": [
+                    "Unit Blocks"
+                ],
+                "summary": "List Blocked Dates of a Unit",
+                "operationId": "37e27f2250e3f626fb81abcc7c16c277",
+                "parameters": [
+                    {
+                        "name": "unit",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Block List Fetched Successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Unit Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Unit Blocks"
+                ],
+                "summary": "Block a Date Range",
+                "operationId": "c4d07c6e57e12e31a606de35bbf5924a",
+                "parameters": [
+                    {
+                        "name": "unit",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "start_date",
+                                    "end_date"
+                                ],
+                                "properties": {
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-03"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-04"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Renovasi"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Date Range Blocked Successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error or date range already booked"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/units/{unit}/blocks/{block}": {
+            "delete": {
+                "tags": [
+                    "Unit Blocks"
+                ],
+                "summary": "Delete a Blocked Date Range",
+                "operationId": "c55bfeae8d329e7270a7d2745f19b966",
+                "parameters": [
+                    {
+                        "name": "unit",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "block",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Block Deleted Successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Block Not Found"
                     }
                 },
                 "security": [
@@ -889,6 +1382,70 @@
                 }
             }
         },
+        "/api/units/{id}/status": {
+            "patch": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Update Unit Status",
+                "description": "Update unit availability status. Only accessible by unit owner.",
+                "operationId": "34ef2f284a16e05846c3a5a2fc7cfd09",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "maintenance",
+                                        "enum": [
+                                            "available",
+                                            "rented",
+                                            "maintenance"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Unit status updated successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Unit Not Found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users/{id}": {
             "put": {
                 "tags": [
@@ -1115,8 +1672,20 @@
             "description": "Contracts"
         },
         {
+            "name": "Notifications",
+            "description": "Notifications"
+        },
+        {
             "name": "Payments",
             "description": "Payments"
+        },
+        {
+            "name": "Tenants",
+            "description": "Tenants"
+        },
+        {
+            "name": "Unit Blocks",
+            "description": "Unit Blocks"
         },
         {
             "name": "Units",
