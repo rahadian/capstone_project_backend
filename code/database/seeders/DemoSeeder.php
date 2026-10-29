@@ -35,26 +35,103 @@ class DemoSeeder extends Seeder
         'ruko-c' => 'https://images.unsplash.com/photo-1598062568618-29c189c7f303?auto=format&fit=crop&w=1200&q=80',
         'apartemen-a' => 'https://images.unsplash.com/photo-1649429710616-dad56ce9a076?auto=format&fit=crop&w=1200&q=80',
         'apartemen-b' => 'https://images.unsplash.com/photo-1629042306558-7d1e15cc02fa?auto=format&fit=crop&w=1200&q=80',
+        'kos-e' => 'https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=1200&q=80',
+        'kos-f' => 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1200&q=80',
+        'kos-g' => 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80',
+        'kos-h' => 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80',
+        'kontrakan-d' => 'https://images.unsplash.com/photo-1480074568708-e7b720bb3f09?auto=format&fit=crop&w=1200&q=80',
+        'kontrakan-e' => 'https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=1200&q=80',
+        'kontrakan-f' => 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80',
+        'ruko-d' => 'https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?auto=format&fit=crop&w=1200&q=80',
+        'ruko-e' => 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=1200&q=80',
+        'ruko-f' => 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1200&q=80',
+        'ruko-g' => 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80',
+        'apartemen-c' => 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80',
+        'apartemen-d' => 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=80',
+        'apartemen-e' => 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80',
+        'apartemen-f' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
     ];
 
     private const OWNERS = [
         'wahyu' => ['Wahyu Pratama', 'wahyu@umkm.id'],
         'rina' => ['Rina Kartika', 'rina@umkm.id'],
+        // Dua akun berikut hanya untuk variasi katalog; tidak dibagikan ke penguji.
+        'dimas' => ['Dimas Anggara', 'dimas@umkm.id'],
+        'putri' => ['Putri Maharani', 'putri@umkm.id'],
     ];
 
+    /**
+     * [slug unik, slug foto, pemilik, nama, tipe, alamat, harga, status, fasilitas]
+     * Slug unik memakai awalan pemilik karena nama unit hanya unik per pemilik.
+     */
     private const UNITS = [
-        ['kos-a', 'wahyu', 'Kos Melati A1', 'Kamar Kos', 'Jl. Ketintang Baru No. 12, Surabaya', 850000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Parkir Motor']],
-        ['kos-b', 'wahyu', 'Kos Melati A2', 'Kamar Kos', 'Jl. Ketintang Baru No. 12, Surabaya', 950000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Listrik Token']],
-        ['kos-c', 'wahyu', 'Kos Melati B1', 'Kamar Kos', 'Jl. Ketintang Baru No. 14, Surabaya', 1100000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Kloset Duduk', 'Parkir Motor']],
-        ['kos-d', 'wahyu', 'Kos Melati B2', 'Kamar Kos', 'Jl. Ketintang Baru No. 14, Surabaya', 800000, 'available', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Dapur']],
-        ['kontrakan-a', 'wahyu', 'Kontrakan Wonokromo', 'Kontrakan', 'Jl. Wonokromo Gang 3 No. 8, Surabaya', 1800000, 'rented', ['Dapur', 'Parkir Motor', 'Listrik Token', 'Kamar Mandi Dalam']],
-        ['kontrakan-b', 'wahyu', 'Kontrakan Rungkut', 'Kontrakan', 'Jl. Rungkut Asri Timur No. 21, Surabaya', 1650000, 'available', ['Dapur', 'Parkir Motor', 'Listrik Token']],
-        ['kontrakan-c', 'rina', 'Kontrakan Lowokwaru', 'Kontrakan', 'Jl. Soekarno Hatta Gang 7 No. 4, Malang', 1500000, 'rented', ['Dapur', 'Kamar Mandi Dalam', 'Parkir Motor']],
-        ['ruko-a', 'rina', 'Ruko Soekarno Hatta', 'Ruang Usaha', 'Jl. Soekarno Hatta No. 88, Malang', 4500000, 'rented', ['Etalase', 'Listrik Token', 'Parkir Motor']],
-        ['ruko-b', 'rina', 'Ruko Basuki Rahmat', 'Ruang Usaha', 'Jl. Basuki Rahmat No. 45, Malang', 5200000, 'available', ['Etalase', 'Listrik Token', 'Kamar Mandi Dalam']],
-        ['ruko-c', 'rina', 'Ruko Ijen', 'Ruang Usaha', 'Jl. Ijen No. 17, Malang', 4800000, 'maintenance', ['Etalase', 'Listrik Token', 'Parkir Motor', 'Keamanan 24 Jam']],
-        ['apartemen-a', 'rina', 'Apartemen Araya Studio', 'Apartemen', 'Jl. Raya Araya No. 9, Malang', 2500000, 'rented', ['AC', 'WiFi', 'Lift', 'Keamanan 24 Jam']],
-        ['apartemen-b', 'rina', 'Apartemen Soekarno Hatta', 'Apartemen', 'Jl. Soekarno Hatta No. 100, Malang', 2200000, 'available', ['AC', 'WiFi', 'Lift', 'Parkir Motor']],
+        ['wahyu-kos-a', 'kos-a', 'wahyu', 'Kos Melati A1', 'Kamar Kos', 'Jl. Ketintang Baru No. 12, Surabaya', 850000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['wahyu-kos-b', 'kos-b', 'wahyu', 'Kos Melati A2', 'Kamar Kos', 'Jl. Ketintang Baru No. 12, Surabaya', 950000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Listrik Token']],
+        ['wahyu-kos-c', 'kos-c', 'wahyu', 'Kos Melati B1', 'Kamar Kos', 'Jl. Ketintang Baru No. 14, Surabaya', 1100000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Kloset Duduk', 'Parkir Motor']],
+        ['wahyu-kos-d', 'kos-d', 'wahyu', 'Kos Melati B2', 'Kamar Kos', 'Jl. Ketintang Baru No. 14, Surabaya', 800000, 'available', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Dapur']],
+        ['wahyu-kontrakan-a', 'kontrakan-a', 'wahyu', 'Kontrakan Wonokromo', 'Kontrakan', 'Jl. Wonokromo Gang 3 No. 8, Surabaya', 1800000, 'rented', ['Dapur', 'Parkir Motor', 'Listrik Token', 'Kamar Mandi Dalam']],
+        ['wahyu-kontrakan-b', 'kontrakan-b', 'wahyu', 'Kontrakan Rungkut', 'Kontrakan', 'Jl. Rungkut Asri Timur No. 21, Surabaya', 1650000, 'available', ['Dapur', 'Parkir Motor', 'Listrik Token']],
+        ['wahyu-kontrakan-d', 'kontrakan-d', 'wahyu', 'Kontrakan Bratang', 'Kontrakan', 'Jl. Bratang Gede No. 15, Surabaya', 1900000, 'rented', ['Dapur', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['wahyu-kontrakan-e', 'kontrakan-e', 'wahyu', 'Kontrakan Ketintang', 'Kontrakan', 'Jl. Ketintang Baru No. 30, Surabaya', 1750000, 'available', ['Dapur', 'Listrik Token', 'Parkir Motor']],
+        ['wahyu-ruko-d', 'ruko-d', 'wahyu', 'Ruko Rungkut', 'Ruang Usaha', 'Jl. Rungkut Asri Timur No. 5, Surabaya', 4200000, 'rented', ['Etalase', 'Listrik Token', 'Parkir Motor']],
+        ['wahyu-ruko-e', 'ruko-e', 'wahyu', 'Ruko Bratang', 'Ruang Usaha', 'Jl. Bratang Gede No. 44, Surabaya', 4800000, 'available', ['Etalase', 'Kamar Mandi Dalam', 'Listrik Token']],
+        ['wahyu-ruko-f', 'ruko-f', 'wahyu', 'Ruko Wonokromo', 'Ruang Usaha', 'Jl. Wonokromo Gang 3 No. 21, Surabaya', 5000000, 'available', ['Etalase', 'Parkir Motor', 'Keamanan 24 Jam']],
+        ['wahyu-ruko-g', 'ruko-g', 'wahyu', 'Ruko Ketintang', 'Ruang Usaha', 'Jl. Ketintang Baru No. 88, Surabaya', 4400000, 'maintenance', ['Etalase', 'Listrik Token', 'Kamar Mandi Dalam']],
+        ['wahyu-apartemen-c', 'apartemen-c', 'wahyu', 'Apartemen Ketintang Studio', 'Apartemen', 'Jl. Ketintang Baru No. 60, Surabaya', 2300000, 'rented', ['AC', 'WiFi', 'Lift', 'Keamanan 24 Jam']],
+        ['wahyu-apartemen-d', 'apartemen-d', 'wahyu', 'Apartemen Bratang 1 BR', 'Apartemen', 'Jl. Bratang Gede No. 8, Surabaya', 2700000, 'available', ['AC', 'WiFi', 'Lift', 'Parkir Motor']],
+        ['wahyu-apartemen-e', 'apartemen-e', 'wahyu', 'Apartemen Rungkut Studio', 'Apartemen', 'Jl. Rungkut Asri Timur No. 33, Surabaya', 2100000, 'available', ['AC', 'WiFi', 'Lift', 'Keamanan 24 Jam']],
+        ['wahyu-apartemen-f', 'apartemen-f', 'wahyu', 'Apartemen Wonokromo 1 BR', 'Apartemen', 'Jl. Wonokromo Gang 3 No. 12, Surabaya', 2600000, 'available', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Parkir Motor']],
+
+        ['rina-kontrakan-c', 'kontrakan-c', 'rina', 'Kontrakan Lowokwaru', 'Kontrakan', 'Jl. Soekarno Hatta Gang 7 No. 4, Malang', 1500000, 'rented', ['Dapur', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['rina-ruko-a', 'ruko-a', 'rina', 'Ruko Soekarno Hatta', 'Ruang Usaha', 'Jl. Soekarno Hatta No. 88, Malang', 4500000, 'rented', ['Etalase', 'Listrik Token', 'Parkir Motor']],
+        ['rina-ruko-b', 'ruko-b', 'rina', 'Ruko Basuki Rahmat', 'Ruang Usaha', 'Jl. Basuki Rahmat No. 45, Malang', 5200000, 'available', ['Etalase', 'Listrik Token', 'Kamar Mandi Dalam']],
+        ['rina-ruko-c', 'ruko-c', 'rina', 'Ruko Ijen', 'Ruang Usaha', 'Jl. Ijen No. 17, Malang', 4800000, 'maintenance', ['Etalase', 'Listrik Token', 'Parkir Motor', 'Keamanan 24 Jam']],
+        ['rina-apartemen-a', 'apartemen-a', 'rina', 'Apartemen Araya Studio', 'Apartemen', 'Jl. Raya Araya No. 9, Malang', 2500000, 'rented', ['AC', 'WiFi', 'Lift', 'Keamanan 24 Jam']],
+        ['rina-apartemen-b', 'apartemen-b', 'rina', 'Apartemen Soekarno Hatta', 'Apartemen', 'Jl. Soekarno Hatta No. 100, Malang', 2200000, 'available', ['AC', 'WiFi', 'Lift', 'Parkir Motor']],
+        ['rina-kos-e', 'kos-e', 'rina', 'Kos Ijen C1', 'Kamar Kos', 'Jl. Ijen No. 22, Malang', 900000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['rina-kos-f', 'kos-f', 'rina', 'Kos Ijen C2', 'Kamar Kos', 'Jl. Ijen No. 22, Malang', 1000000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Listrik Token']],
+        ['rina-kos-g', 'kos-g', 'rina', 'Kos Soekarno Hatta D1', 'Kamar Kos', 'Jl. Soekarno Hatta Gang 7 No. 9, Malang', 850000, 'available', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Dapur']],
+        ['rina-kos-h', 'kos-h', 'rina', 'Kos Soekarno Hatta D2', 'Kamar Kos', 'Jl. Soekarno Hatta Gang 7 No. 9, Malang', 800000, 'available', ['AC', 'WiFi', 'Kloset Duduk', 'Parkir Motor']],
+        ['rina-kontrakan-d', 'kontrakan-d', 'rina', 'Kontrakan Ijen', 'Kontrakan', 'Jl. Ijen No. 45, Malang', 1700000, 'rented', ['Dapur', 'Kamar Mandi Dalam', 'Listrik Token']],
+        ['rina-kontrakan-e', 'kontrakan-e', 'rina', 'Kontrakan Basuki Rahmat', 'Kontrakan', 'Jl. Basuki Rahmat No. 12, Malang', 1600000, 'rented', ['Dapur', 'Parkir Motor', 'Kamar Mandi Dalam']],
+        ['rina-kontrakan-f', 'kontrakan-f', 'rina', 'Kontrakan Araya', 'Kontrakan', 'Jl. Raya Araya No. 21, Malang', 1550000, 'available', ['Dapur', 'Listrik Token', 'Parkir Motor']],
+        ['rina-ruko-d', 'ruko-d', 'rina', 'Ruko Araya', 'Ruang Usaha', 'Jl. Raya Araya No. 3, Malang', 4600000, 'available', ['Etalase', 'Parkir Motor', 'Kamar Mandi Dalam']],
+        ['rina-apartemen-c', 'apartemen-c', 'rina', 'Apartemen Basuki Rahmat Studio', 'Apartemen', 'Jl. Basuki Rahmat No. 60, Malang', 2400000, 'available', ['AC', 'WiFi', 'Lift', 'Keamanan 24 Jam']],
+        ['rina-apartemen-d', 'apartemen-d', 'rina', 'Apartemen Ijen 1 BR', 'Apartemen', 'Jl. Ijen No. 30, Malang', 2600000, 'available', ['AC', 'WiFi', 'Lift', 'Parkir Motor']],
+
+        ['dimas-kos-a', 'kos-a', 'dimas', 'Kos Dago Asri A1', 'Kamar Kos', 'Jl. Dago Asri No. 4, Bandung', 950000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['dimas-kos-b', 'kos-b', 'dimas', 'Kos Dago Asri A2', 'Kamar Kos', 'Jl. Dago Asri No. 4, Bandung', 1000000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Listrik Token']],
+        ['dimas-kos-c', 'kos-c', 'dimas', 'Kos Cihampelas B1', 'Kamar Kos', 'Jl. Cihampelas No. 118, Bandung', 850000, 'available', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Dapur']],
+        ['dimas-kos-d', 'kos-d', 'dimas', 'Kos Cihampelas B2', 'Kamar Kos', 'Jl. Cihampelas No. 118, Bandung', 800000, 'available', ['AC', 'WiFi', 'Kloset Duduk', 'Parkir Motor']],
+        ['dimas-kontrakan-a', 'kontrakan-a', 'dimas', 'Kontrakan Sukajadi', 'Kontrakan', 'Jl. Sukajadi No. 27, Bandung', 1900000, 'rented', ['Dapur', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['dimas-kontrakan-b', 'kontrakan-b', 'dimas', 'Kontrakan Buah Batu', 'Kontrakan', 'Jl. Buah Batu No. 90, Bandung', 1750000, 'rented', ['Dapur', 'Listrik Token', 'Parkir Motor']],
+        ['dimas-kontrakan-c', 'kontrakan-c', 'dimas', 'Kontrakan Dago', 'Kontrakan', 'Jl. Dago Asri No. 11, Bandung', 1850000, 'available', ['Dapur', 'Kamar Mandi Dalam', 'Listrik Token']],
+        ['dimas-kontrakan-d', 'kontrakan-d', 'dimas', 'Kontrakan Cihampelas', 'Kontrakan', 'Jl. Cihampelas No. 45, Bandung', 1650000, 'available', ['Dapur', 'Parkir Motor', 'Kamar Mandi Dalam']],
+        ['dimas-ruko-a', 'ruko-a', 'dimas', 'Ruko Sukajadi', 'Ruang Usaha', 'Jl. Sukajadi No. 66, Bandung', 5200000, 'rented', ['Etalase', 'Listrik Token', 'Parkir Motor']],
+        ['dimas-ruko-b', 'ruko-b', 'dimas', 'Ruko Buah Batu', 'Ruang Usaha', 'Jl. Buah Batu No. 14, Bandung', 4800000, 'rented', ['Etalase', 'Kamar Mandi Dalam', 'Keamanan 24 Jam']],
+        ['dimas-ruko-c', 'ruko-c', 'dimas', 'Ruko Dago', 'Ruang Usaha', 'Jl. Dago Asri No. 77, Bandung', 5000000, 'available', ['Etalase', 'Listrik Token', 'Parkir Motor']],
+        ['dimas-ruko-d', 'ruko-d', 'dimas', 'Ruko Cihampelas', 'Ruang Usaha', 'Jl. Cihampelas No. 200, Bandung', 4500000, 'maintenance', ['Etalase', 'Listrik Token', 'Kamar Mandi Dalam']],
+        ['dimas-apartemen-a', 'apartemen-a', 'dimas', 'Apartemen Dago Studio', 'Apartemen', 'Jl. Dago Asri No. 100, Bandung', 2500000, 'rented', ['AC', 'WiFi', 'Lift', 'Keamanan 24 Jam']],
+        ['dimas-apartemen-b', 'apartemen-b', 'dimas', 'Apartemen Sukajadi 1 BR', 'Apartemen', 'Jl. Sukajadi No. 35, Bandung', 2800000, 'available', ['AC', 'WiFi', 'Lift', 'Parkir Motor']],
+        ['dimas-apartemen-c', 'apartemen-c', 'dimas', 'Apartemen Buah Batu Studio', 'Apartemen', 'Jl. Buah Batu No. 55, Bandung', 2300000, 'available', ['AC', 'WiFi', 'Keamanan 24 Jam', 'Parkir Motor']],
+        ['dimas-apartemen-d', 'apartemen-d', 'dimas', 'Apartemen Cihampelas 1 BR', 'Apartemen', 'Jl. Cihampelas No. 150, Bandung', 2700000, 'available', ['AC', 'WiFi', 'Lift', 'Kamar Mandi Dalam']],
+
+        ['putri-kos-a', 'kos-a', 'putri', 'Kos Kaliurang A1', 'Kamar Kos', 'Jl. Kaliurang No. 8, Yogyakarta', 800000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['putri-kos-b', 'kos-b', 'putri', 'Kos Kaliurang A2', 'Kamar Kos', 'Jl. Kaliurang No. 8, Yogyakarta', 850000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Listrik Token']],
+        ['putri-kos-c', 'kos-c', 'putri', 'Kos Gejayan B1', 'Kamar Kos', 'Jl. Gejayan No. 21, Yogyakarta', 900000, 'available', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Dapur']],
+        ['putri-kos-d', 'kos-d', 'putri', 'Kos Gejayan B2', 'Kamar Kos', 'Jl. Gejayan No. 21, Yogyakarta', 750000, 'available', ['AC', 'WiFi', 'Kloset Duduk', 'Parkir Motor']],
+        ['putri-kontrakan-a', 'kontrakan-a', 'putri', 'Kontrakan Gejayan', 'Kontrakan', 'Jl. Gejayan No. 40, Yogyakarta', 1600000, 'rented', ['Dapur', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['putri-kontrakan-b', 'kontrakan-b', 'putri', 'Kontrakan Magelang', 'Kontrakan', 'Jl. Magelang No. 12, Yogyakarta', 1700000, 'rented', ['Dapur', 'Listrik Token', 'Kamar Mandi Dalam']],
+        ['putri-kontrakan-c', 'kontrakan-c', 'putri', 'Kontrakan Kaliurang', 'Kontrakan', 'Jl. Kaliurang No. 55, Yogyakarta', 1500000, 'available', ['Dapur', 'Parkir Motor', 'Listrik Token']],
+        ['putri-kontrakan-d', 'kontrakan-d', 'putri', 'Kontrakan Malioboro', 'Kontrakan', 'Jl. Malioboro No. 30, Yogyakarta', 1800000, 'available', ['Dapur', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['putri-ruko-a', 'ruko-a', 'putri', 'Ruko Malioboro', 'Ruang Usaha', 'Jl. Malioboro No. 88, Yogyakarta', 4600000, 'rented', ['Etalase', 'Listrik Token', 'Parkir Motor']],
+        ['putri-ruko-b', 'ruko-b', 'putri', 'Ruko Gejayan', 'Ruang Usaha', 'Jl. Gejayan No. 9, Yogyakarta', 4000000, 'rented', ['Etalase', 'Kamar Mandi Dalam', 'Listrik Token']],
+        ['putri-ruko-c', 'ruko-c', 'putri', 'Ruko Magelang', 'Ruang Usaha', 'Jl. Magelang No. 77, Yogyakarta', 3800000, 'available', ['Etalase', 'Parkir Motor', 'Keamanan 24 Jam']],
+        ['putri-ruko-d', 'ruko-d', 'putri', 'Ruko Kaliurang', 'Ruang Usaha', 'Jl. Kaliurang No. 120, Yogyakarta', 3600000, 'maintenance', ['Etalase', 'Listrik Token', 'Kamar Mandi Dalam']],
+        ['putri-apartemen-a', 'apartemen-a', 'putri', 'Apartemen Malioboro Studio', 'Apartemen', 'Jl. Malioboro No. 150, Yogyakarta', 2200000, 'rented', ['AC', 'WiFi', 'Lift', 'Keamanan 24 Jam']],
+        ['putri-apartemen-b', 'apartemen-b', 'putri', 'Apartemen Gejayan 1 BR', 'Apartemen', 'Jl. Gejayan No. 60, Yogyakarta', 2500000, 'available', ['AC', 'WiFi', 'Lift', 'Parkir Motor']],
+        ['putri-apartemen-c', 'apartemen-c', 'putri', 'Apartemen Magelang Studio', 'Apartemen', 'Jl. Magelang No. 44, Yogyakarta', 2000000, 'available', ['AC', 'WiFi', 'Keamanan 24 Jam', 'Parkir Motor']],
+        ['putri-apartemen-d', 'apartemen-d', 'putri', 'Apartemen Kaliurang 1 BR', 'Apartemen', 'Jl. Kaliurang No. 210, Yogyakarta', 2400000, 'available', ['AC', 'WiFi', 'Lift', 'Kamar Mandi Dalam']],
     ];
 
     /**
@@ -75,23 +152,23 @@ class DemoSeeder extends Seeder
      * [slug unit, nama penyewa, status, bulan mulai, bulan akhir] relatif bulan berjalan.
      */
     private const CONTRACTS = [
-        ['kos-a', 'Bima Saputra', 'active', -8, 3],
-        ['kos-b', 'Andi Pratama', 'active', -6, 5],
-        ['kos-c', 'Nur Aisyah', 'active', -4, 7],
-        ['kontrakan-a', 'Fitri Handayani', 'active', -10, 1],
-        ['kontrakan-c', 'Agus Setiawan', 'active', -3, 8],
-        ['ruko-a', 'Dedi Kurniawan', 'active', -5, 6],
-        ['apartemen-a', 'Sari Dewi', 'active', -2, 9],
-        ['kos-d', 'Bima Saputra', 'pending', 1, 12],
-        ['ruko-b', 'Maya Lestari', 'pending', 1, 12],
-        ['kontrakan-b', 'Dedi Kurniawan', 'completed', -14, -3],
-        ['apartemen-b', 'Maya Lestari', 'cancelled', -6, -5],
+        ['wahyu-kos-a', 'Bima Saputra', 'active', -8, 3],
+        ['wahyu-kos-b', 'Andi Pratama', 'active', -6, 5],
+        ['wahyu-kos-c', 'Nur Aisyah', 'active', -4, 7],
+        ['wahyu-kontrakan-a', 'Fitri Handayani', 'active', -10, 1],
+        ['rina-kontrakan-c', 'Agus Setiawan', 'active', -3, 8],
+        ['rina-ruko-a', 'Dedi Kurniawan', 'active', -5, 6],
+        ['rina-apartemen-a', 'Sari Dewi', 'active', -2, 9],
+        ['wahyu-kos-d', 'Bima Saputra', 'pending', 1, 12],
+        ['rina-ruko-b', 'Maya Lestari', 'pending', 1, 12],
+        ['wahyu-kontrakan-b', 'Dedi Kurniawan', 'completed', -14, -3],
+        ['rina-apartemen-b', 'Maya Lestari', 'cancelled', -6, -5],
     ];
 
     /**
      * Pembayaran dua kontrak ini dicatat pemilik unit sebagai bukti transfer manual.
      */
-    private const OWNER_RECORDED_UNITS = ['kos-a', 'ruko-a'];
+    private const OWNER_RECORDED_UNITS = ['wahyu-kos-a', 'rina-ruko-a'];
 
     public function run(): void
     {
@@ -108,13 +185,13 @@ class DemoSeeder extends Seeder
         }
 
         $units = [];
-        foreach (self::UNITS as [$slug, $owner, $name, $type, $address, $price, $status, $facilities]) {
+        foreach (self::UNITS as [$slug, $photo, $owner, $name, $type, $address, $price, $status, $facilities]) {
             $units[$slug] = Unit::updateOrCreate(
                 ['owner_id' => $owners[$owner]->id, 'name' => $name],
                 [
                     'type' => $type,
                     'facilities' => $facilities,
-                    'image' => $images[$slug],
+                    'image' => $images[$photo],
                     'address' => $address,
                     'price' => $price,
                     'status' => $status,
@@ -196,7 +273,7 @@ class DemoSeeder extends Seeder
 
         // Blok sengaja di unit tanpa kontrak berjalan: kos-d dan ruko-b punya pengajuan
         // yang mulai awal bulan depan, jadi blok H+3 sampai H+10 akan menabraknya.
-        foreach ([['kontrakan-b', 'Perbaikan atap'], ['apartemen-b', 'Cat ulang']] as [$slug, $note]) {
+        foreach ([['wahyu-kontrakan-b', 'Perbaikan atap'], ['rina-apartemen-b', 'Cat ulang']] as [$slug, $note]) {
             UnitBlock::updateOrCreate(
                 ['unit_id' => $units[$slug]->id, 'note' => $note],
                 [
@@ -212,10 +289,10 @@ class DemoSeeder extends Seeder
         if ($wahyu->notifications()->count() === 0) {
             $month = Carbon::today()->format('Y-m');
             $due = Carbon::parse($month.'-10');
-            $contract = $contracts['kos-a'];
+            $contract = $contracts['wahyu-kos-a'];
 
             foreach (['h_minus_7', 'h_minus_1', 'h_plus_1'] as $type) {
-                $wahyu->notify(new PaymentDueReminder($type, $month, (int) $units['kos-a']->price, $due, $contract));
+                $wahyu->notify(new PaymentDueReminder($type, $month, (int) $units['wahyu-kos-a']->price, $due, $contract));
             }
 
             $wahyu->notifications()->first()?->markAsRead();

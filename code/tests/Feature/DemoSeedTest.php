@@ -62,13 +62,18 @@ class DemoSeedTest extends TestCase
         $this->assertSame('tenant', $users->firstWhere('email', 'bima@umkm.id')->role);
         $this->assertSame('tenant', $users->firstWhere('email', 'sari@umkm.id')->role);
 
+        // Dua pemilik tambahan hanya untuk variasi katalog, tidak dibagikan ke penguji.
+        $this->assertSame(4, User::where('role', 'owner')->count());
+        $this->assertDatabaseHas('users', ['email' => 'dimas@umkm.id', 'role' => 'owner']);
+        $this->assertDatabaseHas('users', ['email' => 'putri@umkm.id', 'role' => 'owner']);
+
         $this->assertCount(8, Tenant::all());
         $this->assertNotNull(Tenant::where('name', 'Bima Saputra')->first()->user_id);
         $this->assertNotNull(Tenant::where('name', 'Sari Dewi')->first()->user_id);
         $this->assertSame(2, Tenant::whereNotNull('user_id')->count());
     }
 
-    public function test_seed_creates_twelve_units_with_absolute_unsplash_images(): void
+    public function test_seed_creates_sixty_four_units_with_absolute_unsplash_images(): void
     {
         $this->seed(DemoSeeder::class);
 
@@ -76,9 +81,18 @@ class DemoSeedTest extends TestCase
         $types = ['Kamar Kos', 'Kontrakan', 'Ruang Usaha', 'Apartemen'];
         $statuses = ['available', 'rented', 'maintenance'];
 
-        $this->assertCount(12, $units);
-        $this->assertSame(7, Unit::where('status', 'rented')->count());
-        $this->assertCount(12, Storage::disk('public')->allFiles('demo'));
+        $this->assertCount(64, $units);
+        $this->assertSame(32, Unit::where('status', 'available')->count());
+        $this->assertSame(28, Unit::where('status', 'rented')->count());
+        $this->assertSame(4, Unit::where('status', 'maintenance')->count());
+        $this->assertCount(27, Storage::disk('public')->allFiles('demo'));
+        $this->assertCount(4, Unit::pluck('owner_id')->unique());
+        $this->assertSame(16, Unit::where('owner_id', User::where('email', 'dimas@umkm.id')->value('id'))->count());
+
+        // Sebaran foto per tipe: setiap foto milik tipe itu terpakai, tidak menumpuk di satu unit.
+        foreach (['Kamar Kos' => 8, 'Kontrakan' => 6, 'Ruang Usaha' => 7, 'Apartemen' => 6] as $type => $distinct) {
+            $this->assertSame($distinct, Unit::where('type', $type)->pluck('image')->unique()->count());
+        }
 
         foreach ($units as $unit) {
             $this->assertStringStartsWith('http', $unit->image);
@@ -98,6 +112,10 @@ class DemoSeedTest extends TestCase
         foreach ($units->where('type', 'Ruang Usaha') as $ruko) {
             $this->assertContains('Etalase', $ruko->facilities);
         }
+
+        // Katalog publik hanya menampilkan unit available; 32 baris adalah isi halaman depan.
+        $res = $this->getJson('/api/list/units?limit=50')->assertOk()->json();
+        $this->assertCount(32, $res['data']);
     }
 
     public function test_seed_creates_contracts_and_payments_inside_valid_enums(): void
