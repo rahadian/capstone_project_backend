@@ -123,6 +123,25 @@ class ContractAvailabilityTest extends TestCase
             ->assertStatus(201);
     }
 
+    public function test_tenant_booking_on_active_contract_end_date_is_accepted()
+    {
+        $owner = $this->owner();
+        $unit = $this->unit($owner);
+        $this->contract($unit, $this->tenant('Penghuni Lama'), '2026-11-01', '2026-12-01');
+
+        $user = $this->tenantUser($this->tenant('Penyewa Baru'));
+
+        // contracts.end_date eksklusif, jadi 2026-12-01 bebas ditempati kontrak berikutnya.
+        $this->actingAs($user, 'api')
+            ->postJson('/api/contracts', [
+                'unit_id' => $unit->id,
+                'start_date' => '2026-12-01',
+                'end_date' => '2027-01-01',
+                'total_price' => 3_600_000,
+            ])
+            ->assertStatus(201);
+    }
+
     public function test_owner_creates_contract_for_own_tenant()
     {
         $owner = $this->owner();

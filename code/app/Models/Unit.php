@@ -48,25 +48,31 @@ class Unit extends Model
         return $this->hasMany(UnitBlock::class, 'unit_id');
     }
 
+    /**
+     * Rentang yang diterima bersifat setengah terbuka [start, end), seperti contracts.end_date.
+     * Blok unit disimpan inklusif, jadi pemanggil yang menerima input inklusif menggeser end-nya.
+     */
     public function hasOverlap(string $start, string $end, ?int $ignoreContractId = null): bool
     {
         $contractOverlap = $this->contracts()
             ->where('status', 'active')
             ->when($ignoreContractId, fn ($query) => $query->whereKeyNot($ignoreContractId))
-            ->where('start_date', '<=', $end)
-            ->where('end_date', '>=', $start)
+            // whereDate: SQLite menyimpan kolom date sebagai 'Y-m-d H:i:s', perbandingan string biasa meleset di batas hari.
+            ->whereDate('start_date', '<', $end)
+            ->whereDate('end_date', '>', $start)
             ->exists();
 
         return $contractOverlap || $this->blocks()
-            ->where('start_date', '<=', $end)
-            ->where('end_date', '>=', $start)
+            ->whereDate('start_date', '<=', $end)
+            ->whereDate('end_date', '>=', $start)
             ->exists();
     }
 
     public function getBookedDatesAttribute(): array
     {
         $dates = $this->datesBetween(
-            $this->contracts()->where('status', 'active')->get(['start_date', 'end_date'])
+            $this->contracts()->where('status', 'active')->get(['start_date', 'end_date']),
+            includeEnd: false
         );
 
         return $this->sortDates(array_merge(
@@ -80,13 +86,20 @@ class Unit extends Model
         return $this->sortDates($this->datesBetween($this->blocks()->get(['start_date', 'end_date'])));
     }
 
-    private function datesBetween(iterable $ranges): array
+    private function datesBetween(iterable $ranges, bool $includeEnd = true): array
     {
         $dates = [];
 
         foreach ($ranges as $range) {
             if ($range->start_date && $range->end_date) {
-                $period = CarbonPeriod::create($range->start_date, $range->end_date);
+                $end = $includeEnd ? $range->end_date : $range->end_date->copy()->subDay();
+
+                // Rentang setengah terbuka bisa kosong bila end_date == start_date.
+                if ($end->lt($range->start_date)) {
+                    continue;
+                }
+
+                $period = CarbonPeriod::create($range->start_date, $end);
                 foreach ($period as $date) {
                     $dates[] = $date->format('Y-m-d');
                 }

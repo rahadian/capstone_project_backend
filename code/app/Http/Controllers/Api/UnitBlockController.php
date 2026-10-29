@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Unit;
 use App\Models\UnitBlock;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -73,7 +74,10 @@ class UnitBlockController extends Controller
             'note' => 'nullable|string|max:255',
         ]);
 
-        if ($unit->hasOverlap($validated['start_date'], $validated['end_date'])) {
+        // Blok disimpan inklusif, sedangkan hasOverlap() menerima batas eksklusif seperti kontrak.
+        $endExclusive = Carbon::parse($validated['end_date'])->addDay()->toDateString();
+
+        if ($unit->hasOverlap($validated['start_date'], $endExclusive)) {
             return response()->json(['message' => 'Tanggal yang dipilih sudah terisi atau diblokir.'], 422);
         }
 
