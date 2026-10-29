@@ -89,6 +89,7 @@ Notes:
 - The seeder is idempotent: re-running `make seed` does not duplicate rows.
 - Unit photos are downloaded once into `public/uploads/demo/` (gitignored) and stored as `Storage::disk('public')->url(...)`. That URL is built from `APP_URL`, so `APP_URL` must point at a host the browser can reach: `http://localhost:8555` locally, `https://<domain>` on a server. A wrong `APP_URL` (for example `http://localhost` without the port) produces broken images even though the rows look correct.
 - Running the seed on a server downloads the photos there, so the server needs outbound internet access.
+- These credentials are published on purpose: anyone can log in to a demo deployment as an owner or tenant, and re-running the seed restores the demo data. Do not seed a database that holds real user accounts — the seeder never changes an existing account's password (it uses `firstOrCreate`), but it does fill in demo units, tenants, contracts, and payments.
 
 ---
 

@@ -261,6 +261,26 @@ class DemoSeedTest extends TestCase
     }
 
     /**
+     * `POST /api/register` publik: email demo bisa didaftarkan orang lain lebih dulu.
+     * Seed tidak boleh mengambil alih akun itu dengan mengganti kata sandinya.
+     */
+    public function test_seed_does_not_overwrite_an_existing_demo_email(): void
+    {
+        $existing = User::factory()->create([
+            'email' => 'wahyu@umkm.id',
+            'password' => 'rahasia-lain-123',
+            'role' => 'owner',
+        ]);
+
+        $this->seed(DemoSeeder::class);
+
+        $existing->refresh();
+
+        $this->assertTrue(Hash::check('rahasia-lain-123', $existing->password));
+        $this->assertFalse(Hash::check(DemoSeeder::PASSWORD, $existing->password));
+    }
+
+    /**
      * Seed boleh dijalankan di database berisi data lain tanpa menghapusnya.
      */
     public function test_seed_leaves_non_demo_rows_alone(): void

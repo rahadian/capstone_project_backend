@@ -99,7 +99,9 @@ class DemoSeeder extends Seeder
 
         $owners = [];
         foreach (self::OWNERS as $key => [$name, $email]) {
-            $owners[$key] = User::updateOrCreate(
+            // firstOrCreate, bukan updateOrCreate: /api/register publik, jadi email demo
+            // bisa saja sudah didaftarkan orang lain. Jangan pernah menimpa kata sandinya.
+            $owners[$key] = User::firstOrCreate(
                 ['email' => $email],
                 ['name' => $name, 'password' => self::PASSWORD, 'role' => 'owner']
             );
@@ -122,7 +124,7 @@ class DemoSeeder extends Seeder
 
         $tenants = [];
         foreach (self::TENANTS as [$name, $owner, $email, $phone, $ktpStatus, $nik, $address]) {
-            $user = $email ? User::updateOrCreate(
+            $user = $email ? User::firstOrCreate(
                 ['email' => $email],
                 ['name' => $name, 'password' => self::PASSWORD, 'role' => 'tenant']
             ) : null;
