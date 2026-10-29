@@ -16,6 +16,7 @@ class Payment extends Model
         'amount',
         'status',
         'proof_url',
+        'recorded_by',
     ];
 
     protected $casts = [

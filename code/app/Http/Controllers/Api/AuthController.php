@@ -92,6 +92,7 @@ class AuthController extends Controller
                     'phone'   => $validatedData['phone'] ?? null,
                     'id_card_url' => $idCardUrl,
                     'ktp_data_json' => $ktpData,
+                    'ktp_status' => $ktpData ? 'pending' : 'unverified',
                 ]);
             }
 
