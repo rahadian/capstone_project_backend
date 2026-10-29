@@ -139,8 +139,9 @@ class DemoSeedTest extends TestCase
 
         foreach (UnitBlock::with('unit.contracts')->get() as $block) {
             foreach ($block->unit->contracts as $contract) {
-                $overlaps = $block->start_date <= $contract->end_date
-                    && $contract->start_date <= $block->end_date;
+                // Blok inklusif [start, end], kontrak setengah terbuka [start, end).
+                $overlaps = $block->start_date->lt($contract->end_date)
+                    && $contract->start_date->lte($block->end_date);
 
                 $this->assertFalse(
                     $overlaps,

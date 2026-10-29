@@ -327,10 +327,11 @@ class NusantaraBookingTest extends TestCase
         // 3. Tes Response Detail Publik
         $detailResponse = $this->getJson("/api/detail/unit/{$unitId}");
 
+        // contracts.end_date eksklusif: 2026-11-01..2026-11-03 menempati 01 dan 02 saja.
         $detailResponse->assertStatus(200)
             ->assertJsonStructure(['type', 'facilities', 'image', 'booked_dates'])
             ->assertJsonFragment([
-                'booked_dates' => ['2026-11-01', '2026-11-02', '2026-11-03']
+                'booked_dates' => ['2026-11-01', '2026-11-02']
             ]);
     }
 }

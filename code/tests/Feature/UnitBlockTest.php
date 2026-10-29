@@ -126,19 +126,20 @@ class UnitBlockTest extends TestCase
         $this->assertDatabaseCount('unit_blocks', 0);
     }
 
-    public function test_block_boundary_is_inclusive()
+    public function test_block_starting_at_active_contract_end_date_is_accepted()
     {
         $owner = $this->owner();
         $unit = $this->unit($owner);
         $this->activeContract($unit, '2026-11-01', '2026-11-10');
 
+        // contracts.end_date eksklusif: 2026-11-10 sudah bukan hari sewa, jadi blok boleh mulai di situ.
         $this->actingAs($owner, 'api')
             ->postJson("/api/units/{$unit->id}/blocks", [
                 'start_date' => '2026-11-10',
                 'end_date' => '2026-11-12',
             ])
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'Tanggal yang dipilih sudah terisi atau diblokir.');
+            ->assertStatus(201)
+            ->assertJsonPath('message', 'Tanggal berhasil diblokir.');
     }
 
     public function test_block_starting_day_after_active_contract_is_accepted()
@@ -173,6 +174,48 @@ class UnitBlockTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('booked_dates', ['2026-11-03', '2026-11-04'])
             ->assertJsonPath('blocked_dates', ['2026-11-03', '2026-11-04']);
+    }
+
+    public function test_contract_end_date_is_excluded_but_block_end_date_is_included()
+    {
+        $owner = $this->owner();
+        $unit = $this->unit($owner);
+        $this->activeContract($unit, '2026-11-01', '2026-12-01');
+        $unit->blocks()->create([
+            'start_date' => '2026-11-01',
+            'end_date' => '2026-11-08',
+            'created_by' => $owner->id,
+        ]);
+
+        $response = $this->getJson("/api/detail/unit/{$unit->id}")->assertStatus(200);
+
+        $booked = $response->json('booked_dates');
+        $blocked = $response->json('blocked_dates');
+
+        $this->assertContains('2026-11-30', $booked);
+        $this->assertNotContains('2026-12-01', $booked);
+        $this->assertContains('2026-11-08', $blocked);
+    }
+
+    public function test_adjacent_blocks_are_still_rejected()
+    {
+        $owner = $this->owner();
+        $unit = $this->unit($owner);
+        $unit->blocks()->create([
+            'start_date' => '2026-11-05',
+            'end_date' => '2026-11-08',
+            'created_by' => $owner->id,
+        ]);
+
+        // Blok inklusif: 08 sudah diblokir, jadi blok baru yang mulai 08 beririsan.
+        $this->actingAs($owner, 'api')
+            ->postJson("/api/units/{$unit->id}/blocks", [
+                'start_date' => '2026-11-08',
+                'end_date' => '2026-11-10',
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Tanggal yang dipilih sudah terisi atau diblokir.');
+        $this->assertDatabaseCount('unit_blocks', 1);
     }
 
     public function test_owner_can_delete_block_and_other_owner_cannot()
