@@ -84,6 +84,29 @@ class NusantaraBookingTest extends TestCase
         ]);
     }
 
+    /* `image` opsional menurut validasi. Formulir pemilik tidak punya unggahan
+       gambar, jadi unit tanpa foto harus tetap tersimpan — dulu baris ini
+       berakhir 500 "Call to a member function store() on null". */
+    public function test_owner_can_create_unit_without_image()
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+
+        $response = $this->actingAs($owner, 'api')
+            ->postJson('/api/units', [
+                'name'    => 'Ruko Tanpa Foto',
+                'type'    => 'Ruang Usaha',
+                'address' => 'Jl. Contoh Alamat No. 789, Jakarta',
+                'price'   => 3000000,
+            ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('units', [
+            'owner_id' => $owner->id,
+            'name'     => 'Ruko Tanpa Foto',
+            'image'    => null,
+        ]);
+    }
+
     public function test_tenant_can_propose_contract_and_owner_can_activate_it()
     {
         // 1. Setup Data

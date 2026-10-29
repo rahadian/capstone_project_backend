@@ -161,8 +161,11 @@ class UnitController extends Controller
 
         $imgUrl = null;
 
-        $path = $request->file('image')->store('unit_image', 'public');
-        $imgUrl = Storage::disk('public')->url($path);
+        /* `image` nullable: formulir pemilik tidak mengunggah foto, jadi jangan
+           panggil `store()` pada berkas yang tidak ada. */
+        if ($request->hasFile('image')) {
+            $imgUrl = Storage::disk('public')->url($request->file('image')->store('unit_image', 'public'));
+        }
 
 
         $unit = Unit::create([
