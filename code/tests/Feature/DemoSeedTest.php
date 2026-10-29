@@ -67,7 +67,7 @@ class DemoSeedTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'dimas@umkm.id', 'role' => 'owner']);
         $this->assertDatabaseHas('users', ['email' => 'putri@umkm.id', 'role' => 'owner']);
 
-        $this->assertCount(8, Tenant::all());
+        $this->assertCount(24, Tenant::all());
         $this->assertNotNull(Tenant::where('name', 'Bima Saputra')->first()->user_id);
         $this->assertNotNull(Tenant::where('name', 'Sari Dewi')->first()->user_id);
         $this->assertSame(2, Tenant::whereNotNull('user_id')->count());
@@ -124,8 +124,17 @@ class DemoSeedTest extends TestCase
 
         $contracts = Contract::all();
 
-        // Plan menyebut 10 baris, tetapi rinciannya 7 active + 2 pending + 1 completed + 1 cancelled.
-        $this->assertCount(11, $contracts);
+        // 11 kontrak per pemilik × 4 pemilik: 7 active, 2 pending, 1 completed, 1 cancelled.
+        $this->assertCount(44, $contracts);
+        $this->assertSame(28, Contract::where('status', 'active')->count());
+        $this->assertSame(8, Contract::where('status', 'pending')->count());
+        $this->assertSame(4, Contract::where('status', 'completed')->count());
+        $this->assertSame(4, Contract::where('status', 'cancelled')->count());
+
+        // Pengajuan sewa hanya boleh di unit available, kalau tidak hilang dari daftar pemilik.
+        foreach (Contract::where('status', 'pending')->with('unit')->get() as $contract) {
+            $this->assertSame('available', $contract->unit->status);
+        }
         $this->assertEqualsCanonicalizing(
             ['pending', 'active', 'completed', 'cancelled'],
             $contracts->pluck('status')->unique()->values()->all()
@@ -142,8 +151,8 @@ class DemoSeedTest extends TestCase
             $this->assertLessThanOrEqual($contract->end_date->format('Y-m'), $payment->month);
         }
 
-        $this->assertSame(2, Payment::whereNotNull('recorded_by')->count());
-        $this->assertSame(2, UnitBlock::count());
+        $this->assertSame(8, Payment::whereNotNull('recorded_by')->count());
+        $this->assertCount(4, UnitBlock::all());
     }
 
     /**
@@ -202,6 +211,7 @@ class DemoSeedTest extends TestCase
         ]);
 
         $this->assertSame(3, $before['notifications']);
+        $this->assertSame(44, $before['contracts']);
         $this->assertSame(1, DB::table('notifications')->whereNotNull('read_at')->count());
     }
 
@@ -252,7 +262,7 @@ class DemoSeedTest extends TestCase
         $this->seed(DemoSeeder::class);
 
         $currentMonth = Carbon::today()->format('Y-m');
-        $rejectedUnit = 'Kos Melati B1';
+        $rejectedUnits = ['Kos Melati B1', 'Ruko Soekarno Hatta', 'Kos Dago Asri A1', 'Kos Kaliurang A1'];
 
         foreach (Contract::where('status', 'active')->with('unit')->get() as $contract) {
             $expected = [];
@@ -265,7 +275,7 @@ class DemoSeedTest extends TestCase
             foreach ($contract->payments as $payment) {
                 if ($payment->month === $currentMonth) {
                     $this->assertSame('pending', $payment->status);
-                } elseif ($contract->unit->name === $rejectedUnit) {
+                } elseif (in_array($contract->unit->name, $rejectedUnits, true)) {
                     $this->assertSame('rejected', $payment->status);
                 } else {
                     $this->assertSame('paid', $payment->status);
@@ -323,6 +333,6 @@ class DemoSeedTest extends TestCase
 
         $this->assertDatabaseHas('users', ['email' => 'lain@example.com']);
         $this->assertDatabaseHas('units', ['id' => $unit->id, 'name' => 'Unit Milik Orang Lain']);
-        $this->assertSame(13, Unit::count());
+        $this->assertSame(65, Unit::count());
     }
 }

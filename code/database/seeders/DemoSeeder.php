@@ -146,29 +146,96 @@ class DemoSeeder extends Seeder
         ['Fitri Handayani', 'wahyu', null, '081234500016', 'verified', '3578011203940006', 'Jl. Wonokromo Gang 3 No. 8, Surabaya'],
         ['Agus Setiawan', 'rina', null, '081234500017', 'pending', '3573024506950007', 'Jl. Soekarno Hatta Gang 7 No. 4, Malang'],
         ['Maya Lestari', 'rina', null, '081234500018', 'unverified', '3573024506950008', 'Jl. Soekarno Hatta No. 100, Malang'],
+        ['Rizky Ramadhan', 'wahyu', null, '081234500019', 'verified', '3578011203940019', 'Jl. Bratang Gede No. 15, Surabaya'],
+        ['Lestari Wulandari', 'wahyu', null, '081234500020', 'pending', '3578011203940020', 'Jl. Ketintang Baru No. 60, Surabaya'],
+        ['Bayu Nugroho', 'rina', null, '081234500021', 'verified', '3573024506950021', 'Jl. Ijen No. 22, Malang'],
+        ['Intan Permata', 'rina', null, '081234500022', 'unverified', '3573024506950022', 'Jl. Raya Araya No. 3, Malang'],
+        ['Fajar Hidayat', 'dimas', null, '081234500023', 'verified', '3273011203940023', 'Jl. Dago Asri No. 4, Bandung'],
+        ['Ayu Kusuma', 'dimas', null, '081234500024', 'pending', '3273011203940024', 'Jl. Cihampelas No. 118, Bandung'],
+        ['Hendra Wijaya', 'dimas', null, '081234500025', 'verified', '3273011203940025', 'Jl. Sukajadi No. 27, Bandung'],
+        ['Mega Puspita', 'dimas', null, '081234500026', 'unverified', '3273011203940026', 'Jl. Buah Batu No. 90, Bandung'],
+        ['Yoga Pratama', 'dimas', null, '081234500027', 'verified', '3273011203940027', 'Jl. Sukajadi No. 66, Bandung'],
+        ['Sinta Amelia', 'dimas', null, '081234500028', 'pending', '3273011203940028', 'Jl. Dago Asri No. 100, Bandung'],
+        ['Galih Susanto', 'putri', null, '081234500029', 'verified', '3471011203940029', 'Jl. Kaliurang No. 8, Yogyakarta'],
+        ['Nadia Rahma', 'putri', null, '081234500030', 'pending', '3471011203940030', 'Jl. Gejayan No. 21, Yogyakarta'],
+        ['Arif Budiman', 'putri', null, '081234500031', 'verified', '3471011203940031', 'Jl. Gejayan No. 40, Yogyakarta'],
+        ['Dewi Anggraini', 'putri', null, '081234500032', 'unverified', '3471011203940032', 'Jl. Magelang No. 12, Yogyakarta'],
+        ['Rizal Fauzi', 'putri', null, '081234500033', 'verified', '3471011203940033', 'Jl. Malioboro No. 88, Yogyakarta'],
+        ['Tari Wulandari', 'putri', null, '081234500034', 'pending', '3471011203940034', 'Jl. Malioboro No. 150, Yogyakarta'],
     ];
 
     /**
      * [slug unit, nama penyewa, status, bulan mulai, bulan akhir] relatif bulan berjalan.
      */
     private const CONTRACTS = [
+        // wahyu — 7 active, 2 pending, 1 completed, 1 cancelled
         ['wahyu-kos-a', 'Bima Saputra', 'active', -8, 3],
         ['wahyu-kos-b', 'Andi Pratama', 'active', -6, 5],
         ['wahyu-kos-c', 'Nur Aisyah', 'active', -4, 7],
         ['wahyu-kontrakan-a', 'Fitri Handayani', 'active', -10, 1],
+        ['wahyu-kontrakan-d', 'Rizky Ramadhan', 'active', -7, 4],
+        ['wahyu-ruko-d', 'Lestari Wulandari', 'active', -5, 6],
+        ['wahyu-apartemen-c', 'Bima Saputra', 'active', -2, 9],
+        ['wahyu-kos-d', 'Bima Saputra', 'pending', 1, 12],
+        ['wahyu-ruko-e', 'Rizky Ramadhan', 'pending', 1, 12],
+        ['wahyu-kontrakan-b', 'Dedi Kurniawan', 'completed', -14, -3],
+        ['wahyu-apartemen-d', 'Nur Aisyah', 'cancelled', -6, -5],
+
+        // rina
         ['rina-kontrakan-c', 'Agus Setiawan', 'active', -3, 8],
         ['rina-ruko-a', 'Dedi Kurniawan', 'active', -5, 6],
         ['rina-apartemen-a', 'Sari Dewi', 'active', -2, 9],
-        ['wahyu-kos-d', 'Bima Saputra', 'pending', 1, 12],
+        ['rina-kos-e', 'Bayu Nugroho', 'active', -9, 2],
+        ['rina-kos-f', 'Intan Permata', 'active', -6, 5],
+        ['rina-kontrakan-d', 'Bayu Nugroho', 'active', -4, 7],
+        ['rina-kontrakan-e', 'Intan Permata', 'active', -2, 9],
         ['rina-ruko-b', 'Maya Lestari', 'pending', 1, 12],
-        ['wahyu-kontrakan-b', 'Dedi Kurniawan', 'completed', -14, -3],
+        ['rina-kos-g', 'Sari Dewi', 'pending', 1, 12],
+        ['rina-kontrakan-f', 'Maya Lestari', 'completed', -13, -2],
         ['rina-apartemen-b', 'Maya Lestari', 'cancelled', -6, -5],
+
+        // dimas
+        ['dimas-kos-a', 'Fajar Hidayat', 'active', -8, 3],
+        ['dimas-kos-b', 'Ayu Kusuma', 'active', -6, 5],
+        ['dimas-kontrakan-a', 'Hendra Wijaya', 'active', -10, 1],
+        ['dimas-kontrakan-b', 'Mega Puspita', 'active', -4, 7],
+        ['dimas-ruko-a', 'Yoga Pratama', 'active', -5, 6],
+        ['dimas-ruko-b', 'Sinta Amelia', 'active', -3, 8],
+        ['dimas-apartemen-a', 'Fajar Hidayat', 'active', -2, 9],
+        ['dimas-kos-c', 'Ayu Kusuma', 'pending', 1, 12],
+        ['dimas-ruko-c', 'Hendra Wijaya', 'pending', 1, 12],
+        ['dimas-kontrakan-c', 'Mega Puspita', 'completed', -14, -3],
+        ['dimas-apartemen-b', 'Sinta Amelia', 'cancelled', -6, -5],
+
+        // putri
+        ['putri-kos-a', 'Galih Susanto', 'active', -9, 2],
+        ['putri-kos-b', 'Nadia Rahma', 'active', -7, 4],
+        ['putri-kontrakan-a', 'Arif Budiman', 'active', -10, 1],
+        ['putri-kontrakan-b', 'Dewi Anggraini', 'active', -4, 7],
+        ['putri-ruko-a', 'Rizal Fauzi', 'active', -6, 5],
+        ['putri-ruko-b', 'Tari Wulandari', 'active', -3, 8],
+        ['putri-apartemen-a', 'Galih Susanto', 'active', -2, 9],
+        ['putri-kos-c', 'Nadia Rahma', 'pending', 1, 12],
+        ['putri-ruko-c', 'Arif Budiman', 'pending', 1, 12],
+        ['putri-kontrakan-c', 'Dewi Anggraini', 'completed', -13, -2],
+        ['putri-apartemen-b', 'Tari Wulandari', 'cancelled', -5, -4],
     ];
 
     /**
-     * Pembayaran dua kontrak ini dicatat pemilik unit sebagai bukti transfer manual.
+     * Satu unit per pemilik yang bulan lampaunya ditandai `rejected`, supaya UI punya contohnya.
      */
-    private const OWNER_RECORDED_UNITS = ['wahyu-kos-a', 'rina-ruko-a'];
+    private const REJECTED_UNITS = ['Kos Melati B1', 'Ruko Soekarno Hatta', 'Kos Dago Asri A1', 'Kos Kaliurang A1'];
+
+    /**
+     * Dua kontrak per pemilik ini pembayaran bulan pertamanya dicatat pemilik unit
+     * sebagai bukti transfer manual.
+     */
+    private const OWNER_RECORDED_UNITS = [
+        'wahyu-kos-a', 'wahyu-ruko-d',
+        'rina-ruko-a', 'rina-kos-e',
+        'dimas-ruko-a', 'dimas-apartemen-a',
+        'putri-ruko-a', 'putri-apartemen-a',
+    ];
 
     public function run(): void
     {
@@ -255,7 +322,9 @@ class DemoSeeder extends Seeder
             for ($offset = $startOffset; $offset <= 0; $offset++) {
                 $month = $monthStart->copy()->addMonths($offset)->format('Y-m');
                 $isCurrentMonth = $offset === 0;
-                $paymentStatus = $isCurrentMonth ? 'pending' : ($slug === 'kos-c' ? 'rejected' : 'paid');
+                $paymentStatus = $isCurrentMonth
+                    ? 'pending'
+                    : (in_array($unit->name, self::REJECTED_UNITS, true) ? 'rejected' : 'paid');
 
                 Payment::updateOrCreate(
                     ['contract_id' => $contract->id, 'month' => $month],
@@ -271,9 +340,14 @@ class DemoSeeder extends Seeder
             }
         }
 
-        // Blok sengaja di unit tanpa kontrak berjalan: kos-d dan ruko-b punya pengajuan
-        // yang mulai awal bulan depan, jadi blok H+3 sampai H+10 akan menabraknya.
-        foreach ([['wahyu-kontrakan-b', 'Perbaikan atap'], ['rina-apartemen-b', 'Cat ulang']] as [$slug, $note]) {
+        // Blok sengaja di unit tanpa kontrak sama sekali: pengajuan sewa yang mulai awal
+        // bulan depan akan ditolak hasOverlap() kalau blok H+3..H+10 menabraknya.
+        foreach ([
+            ['wahyu-kontrakan-b', 'Perbaikan atap'],
+            ['rina-apartemen-b', 'Cat ulang'],
+            ['dimas-kontrakan-d', 'Perbaikan atap'],
+            ['putri-apartemen-c', 'Cat ulang'],
+        ] as [$slug, $note]) {
             UnitBlock::updateOrCreate(
                 ['unit_id' => $units[$slug]->id, 'note' => $note],
                 [
