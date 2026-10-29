@@ -47,14 +47,14 @@ class DemoSeeder extends Seeder
         ['kos-b', 'wahyu', 'Kos Melati A2', 'Kamar Kos', 'Jl. Ketintang Baru No. 12, Surabaya', 950000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Listrik Token']],
         ['kos-c', 'wahyu', 'Kos Melati B1', 'Kamar Kos', 'Jl. Ketintang Baru No. 14, Surabaya', 1100000, 'rented', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Kloset Duduk', 'Parkir Motor']],
         ['kos-d', 'wahyu', 'Kos Melati B2', 'Kamar Kos', 'Jl. Ketintang Baru No. 14, Surabaya', 800000, 'available', ['AC', 'WiFi', 'Kamar Mandi Dalam', 'Dapur']],
-        ['kontrakan-a', 'wahyu', 'Kontrakan Wonokromo', 'Kontrakan', 'Jl. Wonokromo Gang 3 No. 8, Surabaya', 18000000, 'rented', ['Dapur', 'Parkir Motor', 'Listrik Token', 'Kamar Mandi Dalam']],
-        ['kontrakan-b', 'wahyu', 'Kontrakan Rungkut', 'Kontrakan', 'Jl. Rungkut Asri Timur No. 21, Surabaya', 16500000, 'available', ['Dapur', 'Parkir Motor', 'Listrik Token']],
-        ['kontrakan-c', 'rina', 'Kontrakan Lowokwaru', 'Kontrakan', 'Jl. Soekarno Hatta Gang 7 No. 4, Malang', 15000000, 'rented', ['Dapur', 'Kamar Mandi Dalam', 'Parkir Motor']],
-        ['ruko-a', 'rina', 'Ruko Soekarno Hatta', 'Ruang Usaha', 'Jl. Soekarno Hatta No. 88, Malang', 45000000, 'rented', ['Etalase', 'Listrik Token', 'Parkir Motor']],
-        ['ruko-b', 'rina', 'Ruko Basuki Rahmat', 'Ruang Usaha', 'Jl. Basuki Rahmat No. 45, Malang', 52000000, 'available', ['Etalase', 'Listrik Token', 'Kamar Mandi Dalam']],
-        ['ruko-c', 'rina', 'Ruko Ijen', 'Ruang Usaha', 'Jl. Ijen No. 17, Malang', 48000000, 'maintenance', ['Etalase', 'Listrik Token', 'Parkir Motor', 'Keamanan 24 Jam']],
-        ['apartemen-a', 'rina', 'Apartemen Araya Studio', 'Apartemen', 'Jl. Raya Araya No. 9, Malang', 6000000, 'rented', ['AC', 'WiFi', 'Lift', 'Keamanan 24 Jam']],
-        ['apartemen-b', 'rina', 'Apartemen Soekarno Hatta', 'Apartemen', 'Jl. Soekarno Hatta No. 100, Malang', 5500000, 'available', ['AC', 'WiFi', 'Lift', 'Parkir Motor']],
+        ['kontrakan-a', 'wahyu', 'Kontrakan Wonokromo', 'Kontrakan', 'Jl. Wonokromo Gang 3 No. 8, Surabaya', 1800000, 'rented', ['Dapur', 'Parkir Motor', 'Listrik Token', 'Kamar Mandi Dalam']],
+        ['kontrakan-b', 'wahyu', 'Kontrakan Rungkut', 'Kontrakan', 'Jl. Rungkut Asri Timur No. 21, Surabaya', 1650000, 'available', ['Dapur', 'Parkir Motor', 'Listrik Token']],
+        ['kontrakan-c', 'rina', 'Kontrakan Lowokwaru', 'Kontrakan', 'Jl. Soekarno Hatta Gang 7 No. 4, Malang', 1500000, 'rented', ['Dapur', 'Kamar Mandi Dalam', 'Parkir Motor']],
+        ['ruko-a', 'rina', 'Ruko Soekarno Hatta', 'Ruang Usaha', 'Jl. Soekarno Hatta No. 88, Malang', 4500000, 'rented', ['Etalase', 'Listrik Token', 'Parkir Motor']],
+        ['ruko-b', 'rina', 'Ruko Basuki Rahmat', 'Ruang Usaha', 'Jl. Basuki Rahmat No. 45, Malang', 5200000, 'available', ['Etalase', 'Listrik Token', 'Kamar Mandi Dalam']],
+        ['ruko-c', 'rina', 'Ruko Ijen', 'Ruang Usaha', 'Jl. Ijen No. 17, Malang', 4800000, 'maintenance', ['Etalase', 'Listrik Token', 'Parkir Motor', 'Keamanan 24 Jam']],
+        ['apartemen-a', 'rina', 'Apartemen Araya Studio', 'Apartemen', 'Jl. Raya Araya No. 9, Malang', 2500000, 'rented', ['AC', 'WiFi', 'Lift', 'Keamanan 24 Jam']],
+        ['apartemen-b', 'rina', 'Apartemen Soekarno Hatta', 'Apartemen', 'Jl. Soekarno Hatta No. 100, Malang', 2200000, 'available', ['AC', 'WiFi', 'Lift', 'Parkir Motor']],
     ];
 
     /**
@@ -188,7 +188,9 @@ class DemoSeeder extends Seeder
             }
         }
 
-        foreach ([['kos-d', 'Perbaikan atap'], ['ruko-b', 'Cat ulang']] as [$slug, $note]) {
+        // Blok sengaja di unit tanpa kontrak berjalan: kos-d dan ruko-b punya pengajuan
+        // yang mulai awal bulan depan, jadi blok H+3 sampai H+10 akan menabraknya.
+        foreach ([['kontrakan-b', 'Perbaikan atap'], ['apartemen-b', 'Cat ulang']] as [$slug, $note]) {
             UnitBlock::updateOrCreate(
                 ['unit_id' => $units[$slug]->id, 'note' => $note],
                 [

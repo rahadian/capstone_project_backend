@@ -11,13 +11,12 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * Hanya DemoSeeder: UserSeeder dan UjiDeploySeeder ditinggalkan sebagai
+     * catatan sejarah, gambarnya menunjuk berkas yang tidak ada.
      */
     public function run(): void
     {
-        $this->call([
-            UserSeeder::class,
-            UjiDeploySeeder::class,
-
-        ]);
+        $this->call(DemoSeeder::class);
     }
 }

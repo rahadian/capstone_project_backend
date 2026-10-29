@@ -8,12 +8,16 @@ use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\UnitBlock;
 use App\Models\User;
+use Carbon\Carbon;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Tests\TestCase;
 
 class DemoSeedTest extends TestCase
@@ -33,7 +37,7 @@ class DemoSeedTest extends TestCase
 
         // Tes tidak boleh menyentuh jaringan: semua foto Unsplash dijawab JPEG minimal.
         Http::fake([
-            'images.unsplash.com/*' => Http::response("\xFF\xD8\xFF", 200, ['Content-Type' => 'image/jpeg']),
+            'https://images.unsplash.com/*' => Http::response("\xFF\xD8\xFF", 200, ['Content-Type' => 'image/jpeg']),
         ]);
 
         // url eksplisit supaya Storage::url() tetap menghasilkan URL http seperti disk asli,
@@ -124,6 +128,34 @@ class DemoSeedTest extends TestCase
         $this->assertSame(2, UnitBlock::count());
     }
 
+    /**
+     * Blok unit tidak boleh beririsan dengan kontrak apa pun pada unit yang sama.
+     * Regresi: blok H+3..H+10 pernah menabrak pengajuan sewa yang mulai awal bulan depan,
+     * sehingga aktivasi kontrak ditolak hasOverlap().
+     */
+    public function test_unit_blocks_do_not_overlap_contracts(): void
+    {
+        $this->seed(DemoSeeder::class);
+
+        foreach (UnitBlock::with('unit.contracts')->get() as $block) {
+            foreach ($block->unit->contracts as $contract) {
+                $overlaps = $block->start_date <= $contract->end_date
+                    && $contract->start_date <= $block->end_date;
+
+                $this->assertFalse(
+                    $overlaps,
+                    "Blok {$block->start_date}..{$block->end_date} menabrak kontrak {$contract->status} unit {$block->unit->name}"
+                );
+            }
+        }
+
+        // Demo harus punya keempat tipe unit, kalau tidak filter katalog terlihat kosong.
+        $this->assertEqualsCanonicalizing(
+            ['Kamar Kos', 'Kontrakan', 'Ruang Usaha', 'Apartemen'],
+            Unit::pluck('type')->unique()->values()->all()
+        );
+    }
+
     public function test_seed_is_idempotent(): void
     {
         $this->seed(DemoSeeder::class);
@@ -164,5 +196,88 @@ class DemoSeedTest extends TestCase
         ])
             ->assertOk()
             ->assertJsonStructure(['access_token', 'token_type']);
+    }
+
+    /**
+     * Unduhan gagal harus menghentikan seed, bukan menyimpan URL rusak.
+     */
+    public function test_seed_aborts_when_photo_download_fails(): void
+    {
+        // Http::fake(array) menambah stub, tidak mengganti, dan facade menyimpan
+        // instance hasil resolve. Buang keduanya supaya stub 200 dari setUp() tidak menang.
+        $this->app->forgetInstance(Factory::class);
+        Facade::clearResolvedInstance(Factory::class);
+
+        Http::fake([
+            'https://images.unsplash.com/*' => Http::response('', 404),
+        ]);
+
+        try {
+            // Panggil langsung: lewat $this->seed() exception ditelan lapisan konsol artisan.
+            (new DemoSeeder)->run();
+            $this->fail('Seeder seharusnya melempar RuntimeException saat foto gagal diunduh.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('images.unsplash.com', $e->getMessage());
+            $this->assertStringContainsString('404', $e->getMessage());
+        }
+
+        $this->assertSame(0, Unit::count());
+    }
+
+    /**
+     * Dashboard tagihan menghitung dari rentang kontrak, jadi setiap bulan aktif
+     * wajib punya baris pembayaran dan nominalnya harus sama dengan harga unit.
+     */
+    public function test_active_contracts_have_complete_monthly_payments(): void
+    {
+        $this->seed(DemoSeeder::class);
+
+        $currentMonth = Carbon::today()->format('Y-m');
+        $rejectedUnit = 'Kos Melati B1';
+
+        foreach (Contract::where('status', 'active')->with('unit')->get() as $contract) {
+            $expected = [];
+            for ($month = $contract->start_date->copy()->startOfMonth(); $month->lte(Carbon::today()); $month->addMonth()) {
+                $expected[] = $month->format('Y-m');
+            }
+
+            $this->assertSame($expected, $contract->payments()->orderBy('month')->pluck('month')->all());
+
+            foreach ($contract->payments as $payment) {
+                if ($payment->month === $currentMonth) {
+                    $this->assertSame('pending', $payment->status);
+                } elseif ($contract->unit->name === $rejectedUnit) {
+                    $this->assertSame('rejected', $payment->status);
+                } else {
+                    $this->assertSame('paid', $payment->status);
+                }
+
+                $this->assertSame($contract->unit->price, (float) $payment->amount);
+            }
+
+            $months = $contract->start_date->diffInMonths($contract->end_date) + 1;
+            $this->assertSame($contract->unit->price * $months, (float) $contract->total_price);
+        }
+    }
+
+    /**
+     * Seed boleh dijalankan di database berisi data lain tanpa menghapusnya.
+     */
+    public function test_seed_leaves_non_demo_rows_alone(): void
+    {
+        $other = User::factory()->create(['email' => 'lain@example.com', 'role' => 'owner']);
+        $unit = Unit::create([
+            'owner_id' => $other->id,
+            'name' => 'Unit Milik Orang Lain',
+            'address' => 'Jl. Contoh No. 1',
+            'price' => 1000000,
+            'status' => 'available',
+        ]);
+
+        $this->seed(DemoSeeder::class);
+
+        $this->assertDatabaseHas('users', ['email' => 'lain@example.com']);
+        $this->assertDatabaseHas('units', ['id' => $unit->id, 'name' => 'Unit Milik Orang Lain']);
+        $this->assertSame(13, Unit::count());
     }
 }

@@ -73,6 +73,25 @@ make artisan ARGS="l5-swagger:generate"
 
 ---
 
+## 🔑 Demo Accounts
+
+`make migrate-fresh-seed` runs `DemoSeeder`, which fills the database with demo data: 12 units with real Unsplash photos, tenants, contracts in all four states, monthly payments, unit blocks, and in-app notifications.
+
+| Email | Role | Password |
+| :--- | :--- | :--- |
+| `wahyu@umkm.id` | owner | `demo12345` |
+| `rina@umkm.id` | owner | `demo12345` |
+| `bima@umkm.id` | tenant | `demo12345` |
+| `sari@umkm.id` | tenant | `demo12345` |
+
+Notes:
+
+- The seeder is idempotent: re-running `make seed` does not duplicate rows.
+- Unit photos are downloaded once into `public/uploads/demo/` (gitignored) and stored as `Storage::disk('public')->url(...)`. That URL is built from `APP_URL`, so `APP_URL` must point at a host the browser can reach: `http://localhost:8555` locally, `https://<domain>` on a server. A wrong `APP_URL` (for example `http://localhost` without the port) produces broken images even though the rows look correct.
+- Running the seed on a server downloads the photos there, so the server needs outbound internet access.
+
+---
+
 ## 🌐 Endpoints & Port Mapping
 
 Once the containers are running, you can access the application at the following endpoints:
