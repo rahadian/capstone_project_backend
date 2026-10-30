@@ -39,7 +39,8 @@ class ContractController extends Controller
 
             $query = Contract::with(['unit.owner:id,name,email', 'tenant:id,name,user_id,ktp_status', 'payments'])
                 ->where('tenant_id', $tenant->id)
-                ->latest();
+                ->latest()
+                ->orderByDesc('id');
                 // ->paginate($limit);
 
         } else if ($user->role === 'owner') {
@@ -47,7 +48,8 @@ class ContractController extends Controller
                 ->whereHas('unit', function ($query) use ($user) {
                     $query->where('owner_id', $user->id);
                 })
-                ->latest();
+                ->latest()
+                ->orderByDesc('id');
                 // ->paginate($limit);
 
         } else {
