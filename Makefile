@@ -65,16 +65,16 @@ composer:
 	$(COMPOSE) exec -T $(APP_SERVICE) composer $(ARGS)
 
 migrate:
-	$(COMPOSE) exec -T $(APP_SERVICE) php artisan migrate
+	$(COMPOSE) exec -T $(APP_SERVICE) php artisan migrate --force
 
 migrate-fresh:
-	$(COMPOSE) exec -T $(APP_SERVICE) php artisan migrate:fresh
+	$(COMPOSE) exec -T $(APP_SERVICE) php artisan migrate:fresh --force
 
 migrate-fresh-seed:
-	$(COMPOSE) exec -T $(APP_SERVICE) php artisan migrate:fresh --seed
+	$(COMPOSE) exec -T $(APP_SERVICE) php artisan migrate:fresh --seed --force
 
 seed:
-	$(COMPOSE) exec -T $(APP_SERVICE) php artisan db:seed
+	$(COMPOSE) exec -T $(APP_SERVICE) php artisan db:seed --force
 
 seed-uji:
 	$(COMPOSE) exec -T $(APP_SERVICE) php artisan db:seed --class=UjiDeploySeeder
