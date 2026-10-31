@@ -41,6 +41,7 @@ class PaymentController extends Controller
                     $query->where('tenant_id', $tenant->id);
                 })
                 ->latest()
+                ->orderByDesc('id')
                 ->paginate($limit);
 
         } elseif ($user->role === 'owner') {
@@ -49,6 +50,7 @@ class PaymentController extends Controller
                     $query->where('owner_id', $user->id);
                 })
                 ->latest()
+                ->orderByDesc('id')
                 ->paginate($limit);
 
         } else {

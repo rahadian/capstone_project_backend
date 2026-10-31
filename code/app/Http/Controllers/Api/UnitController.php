@@ -53,7 +53,7 @@ class UnitController extends Controller
         }
 
         $limit = $request->input('limit',10);
-        $units = $query->paginate($limit);
+        $units = $query->orderByDesc('id')->paginate($limit);
 
         return response()->json($units,200);
     }
@@ -86,7 +86,7 @@ class UnitController extends Controller
         }
 
         $limit = $request->input('limit',10);
-        $units = $query->paginate($limit);
+        $units = $query->orderByDesc('id')->paginate($limit);
 
         return response()->json($units,200);
     }
