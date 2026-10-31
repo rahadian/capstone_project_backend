@@ -1,2 +1,4 @@
 docker-compose.override.yml
 nginx/conf.d/vps.conf
+nginx/vps.conf
+nginx/vps_conf.d/
