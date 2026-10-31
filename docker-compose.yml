@@ -40,7 +40,7 @@ services:
       - nusantara_booking-db
 
   nusantara_booking-db:
-    image: mysql:latest
+    image: mariadb:10.11
     container_name: nusantara_booking-db
     restart: unless-stopped
     tty: true
