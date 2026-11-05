@@ -334,4 +334,22 @@ class NusantaraBookingTest extends TestCase
                 'booked_dates' => ['2026-11-01', '2026-11-02']
             ]);
     }
+
+    /* Halaman katalog hanya mengirim baris unit, jadi pengunjung tidak tahu
+       siapa pemiliknya. Detail publik kini menyertakan nama pemilik. */
+    public function test_public_unit_detail_includes_the_owner_name()
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'name' => 'Pemilik Terlihat']);
+        $unit = Unit::create([
+            'owner_id' => $owner->id,
+            'name'     => 'Kos Pemilik Tampil',
+            'address'  => 'Jl. Contoh Alamat No. 11, Bandung',
+            'price'    => 1200000,
+            'status'   => 'available',
+        ]);
+
+        $this->getJson("/api/detail/unit/{$unit->id}")
+            ->assertStatus(200)
+            ->assertJsonPath('owner.name', 'Pemilik Terlihat');
+    }
 }

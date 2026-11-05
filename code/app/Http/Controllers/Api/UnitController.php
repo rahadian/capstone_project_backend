@@ -222,7 +222,7 @@ class UnitController extends Controller
     )]
     public function show_nologin(string $id)
     {
-        $unit = Unit::findOrFail($id);
+        $unit = Unit::with('owner:id,name')->findOrFail($id);
 
         return response()->json($unit, 200);
     }
