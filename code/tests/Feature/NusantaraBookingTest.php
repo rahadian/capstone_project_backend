@@ -396,4 +396,89 @@ class NusantaraBookingTest extends TestCase
                 'booked_dates' => ['2026-11-01', '2026-11-02']
             ]);
     }
+
+    /* Rute `apiResource('tenants')` menyisakan `show` tanpa method, jadi
+       GET /api/tenants/{id} berakhir 500. Pemilik hanya boleh melihat
+       penyewa yang dia kelola. */
+    public function test_owner_can_view_a_tenant_they_manage()
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $tenant = Tenant::create(['owner_id' => $owner->id, 'name' => 'Penyewa Detail', 'phone' => '081200000010']);
+
+        $response = $this->actingAs($owner, 'api')->getJson("/api/tenants/{$tenant->id}");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.name', 'Penyewa Detail');
+    }
+
+    public function test_owner_cannot_view_another_owners_tenant()
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $lain = User::factory()->create(['role' => 'owner']);
+        $tenant = Tenant::create(['owner_id' => $lain->id, 'name' => 'Penyewa Lain']);
+
+        $this->actingAs($owner, 'api')
+            ->getJson("/api/tenants/{$tenant->id}")
+            ->assertStatus(403);
+    }
+
+    /* `destroy` hanya menghapus baris, berkas fotonya tertinggal di disk. */
+    public function test_deleting_a_unit_removes_its_photo_file()
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+
+        $this->actingAs($owner, 'api')->postJson('/api/units', [
+            'name'    => 'Kos Hapus Foto',
+            'type'    => 'Kamar Kos',
+            'address' => 'Jl. Contoh Alamat No. 21, Jakarta',
+            'price'   => 1500000,
+            'image'   => UploadedFile::fake()->image('hapus.jpg', 400, 300),
+        ])->assertStatus(201);
+
+        $unit = Unit::where('name', 'Kos Hapus Foto')->firstOrFail();
+        $path = $unit->getRawOriginal('image');
+        Storage::disk('public')->assertExists($path);
+
+        $this->actingAs($owner, 'api')->deleteJson("/api/units/{$unit->id}")->assertStatus(200);
+
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    /* `update` membaca `$validatedData['role']` padahal `role` tidak ada di
+       aturan validasi, jadi PUT /api/users/{id} selalu 500. */
+    public function test_user_can_view_and_update_their_own_profile()
+    {
+        $user = User::factory()->create(['role' => 'owner', 'email' => 'profil@example.com']);
+
+        $this->actingAs($user, 'api')
+            ->getJson("/api/users/{$user->id}")
+            ->assertStatus(200)
+            ->assertJsonPath('data.email', 'profil@example.com');
+
+        $this->actingAs($user, 'api')
+            ->putJson("/api/users/{$user->id}", [
+                'name'                  => 'Nama Baru',
+                'email'                 => 'profil@example.com',
+                'password'              => 'P@ssw0rdBaru1!',
+                'password_confirmation' => 'P@ssw0rdBaru1!',
+                'phone'                 => '081200000011',
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath('data.name', 'Nama Baru');
+    }
+
+    public function test_user_cannot_update_another_profile()
+    {
+        $user = User::factory()->create(['role' => 'owner']);
+        $lain = User::factory()->create(['role' => 'owner']);
+
+        $this->actingAs($user, 'api')
+            ->putJson("/api/users/{$lain->id}", [
+                'name'                  => 'Coba Ubah',
+                'email'                 => $lain->email,
+                'password'              => 'P@ssw0rdBaru1!',
+                'password_confirmation' => 'P@ssw0rdBaru1!',
+            ])
+            ->assertStatus(403);
+    }
 }

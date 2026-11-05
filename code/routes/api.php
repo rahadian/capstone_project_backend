@@ -18,7 +18,10 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
 
-    Route::apiResource('users', UserController::class);
+    /* Only `show` and `update` exist; `apiResource` registered routes whose
+       methods were commented out, so every other /users call ended in a 500. */
+    Route::get('users/{user}', [UserController::class, 'show']);
+    Route::put('users/{user}', [UserController::class, 'update']);
 
     Route::apiResource('tenants', TenantController::class);
 
