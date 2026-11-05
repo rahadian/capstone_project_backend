@@ -185,9 +185,13 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, User $user)
     {
-        //
+        if ($request->user()->id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized access'], 403);
+        }
+
+        return response()->json(['data' => $user], 200);
     }
 
     /**
@@ -302,14 +306,15 @@ class UserController extends Controller
             )
         ]
     )]
-    public function update(Request $request, string $id)
+    public function update(Request $request, User $user)
     {
-        $authUser = $request->user();
-
+        if ($request->user()->id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized access'], 403);
+        }
 
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => ['required','string','confirmed',
                 Password::min(8)
                     ->letters()
@@ -321,24 +326,21 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:20',
         ]);
 
-        $user = User::findOrFail($id);
         $user->update([
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
             'password' => Hash::make($validatedData['password']),
         ]);
-        if ($validatedData['role'] === 'tenant') {
-            $tenant = $user->tenant;
-                // Update the existing tenant profile
-                $tenant->update([
-                    'name'  => $validatedData['name'],
-                    'phone' => $validatedData['phone'] ?? null,
-                ]);
+        if ($user->role === 'tenant' && $user->tenant) {
+            $user->tenant->update([
+                'name'  => $validatedData['name'],
+                'phone' => $validatedData['phone'] ?? null,
+            ]);
         }
 
         return response()->json([
             'message'   => 'User updated successfully',
-            'user'      => $user
+            'data'      => $user
         ], 200);
     }
 
