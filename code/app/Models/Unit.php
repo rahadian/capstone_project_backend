@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Carbon\CarbonPeriod;
 
 class Unit extends Model
@@ -29,6 +30,13 @@ class Unit extends Model
     ];
 
     protected $appends = ['booked_dates', 'blocked_dates'];
+
+    /* The `image` column keeps the path on the `public` disk; the absolute URL
+       is built on read so an APP_URL change cannot break existing rows. */
+    public function getImageAttribute(?string $value): ?string
+    {
+        return $value ? Storage::disk('public')->url($value) : null;
+    }
 
     /**
      * Get the owner of the unit.

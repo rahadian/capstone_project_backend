@@ -9,7 +9,6 @@ use App\Support\BillReport;
 use App\Support\Csv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use OpenApi\Attributes as OA;
 
 class PaymentController extends Controller
@@ -198,15 +197,15 @@ class PaymentController extends Controller
         }
 
         $payment = DB::transaction(function () use ($request, $validated) {
+            // proof_url keeps a relative path; the model accessor builds the absolute URL.
             $path = $request->file('proof')->store('proofs', 'public');
-            $proofUrl = Storage::disk('public')->url($path);
 
             return Payment::create([
                 'contract_id' => $validated['contract_id'],
                 'month' => $validated['month'],
                 'amount' => $validated['amount'],
                 'status' => 'pending',
-                'proof_url' => $proofUrl,
+                'proof_url' => $path,
             ]);
         });
 

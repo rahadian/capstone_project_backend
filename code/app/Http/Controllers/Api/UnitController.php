@@ -159,12 +159,13 @@ class UnitController extends Controller
             'status'  => 'nullable|string|in:available,rented,maintenance',
         ]);
 
-        $imgUrl = null;
+        $imgPath = null;
 
-        /* `image` nullable: formulir pemilik tidak mengunggah foto, jadi jangan
-           panggil `store()` pada berkas yang tidak ada. */
+        /* `image` is nullable: the owner form does not upload a photo, so never
+           call `store()` on a missing file. The column keeps a relative path;
+           the model accessor builds the absolute URL when the row is read. */
         if ($request->hasFile('image')) {
-            $imgUrl = Storage::disk('public')->url($request->file('image')->store('unit_image', 'public'));
+            $imgPath = $request->file('image')->store('unit_image', 'public');
         }
 
 
@@ -173,7 +174,7 @@ class UnitController extends Controller
             'name'     => $validatedData['name'],
             'type'     => $validatedData['type'],
             'facilities' => $validatedData['facilities'] ?? [],
-            'image'    => $imgUrl,
+            'image'    => $imgPath,
             'address'  => $validatedData['address'],
             'price'    => $validatedData['price'],
             'status'   => $validatedData['status'] ?? 'available',
@@ -301,14 +302,12 @@ class UnitController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            // Hapus gambar lama jika ada
-            if ($unit->image) {
-                $oldPath = str_replace(Storage::disk('public')->url(''), '', $unit->image);
+            // Delete the old photo if any (the image column holds a relative path).
+            if ($oldPath = $unit->getRawOriginal('image')) {
                 Storage::disk('public')->delete($oldPath);
             }
 
-            $path = $request->file('image')->store('unit_image', 'public');
-            $validatedData['image'] = Storage::disk('public')->url($path);
+            $validatedData['image'] = $request->file('image')->store('unit_image', 'public');
         } else {
             // Gunakan gambar yang sudah ada
             unset($validatedData['image']);
