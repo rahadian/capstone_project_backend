@@ -66,7 +66,7 @@ class ManualPaymentTest extends TestCase
             'month' => $month,
             'amount' => 1_200_000,
             'status' => $status,
-            'proof_url' => $status === 'paid' ? null : '/storage/proofs/bukti.jpg',
+            'proof_url' => $status === 'paid' ? null : 'proofs/bukti.jpg',
         ]);
     }
 

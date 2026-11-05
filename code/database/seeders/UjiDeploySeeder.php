@@ -38,7 +38,7 @@ class UjiDeploySeeder extends Seeder
             [
                 'type'        => 'Kamar Kos',
                 'facilities'  => ['AC', 'WiFi', 'Kamar Mandi Dalam'],
-                'image'       => Storage::disk('public')->url('unit_image/sample_unit.jpg'),
+                'image'       => 'unit_image/sample_unit.jpg',
                 'address'     => 'Jl. Raya Bromo No. 123, Surabaya',
                 'price'       => 1500000,
                 'status'      => 'rented',
@@ -113,7 +113,7 @@ class UjiDeploySeeder extends Seeder
             ],
             [
                 'amount' => 1500000,
-                'proof_url'  => Storage::disk('public')->url('payments/bukti_lunas.jpg'),
+                'proof_url'  => 'payments/bukti_lunas.jpg',
                 'status' => 'paid',
             ]
         );
@@ -125,7 +125,7 @@ class UjiDeploySeeder extends Seeder
             ],
             [
                 'amount' => 1500000,
-                'proof_url'  => Storage::disk('public')->url('payments/bukti_pending.jpg'),
+                'proof_url'  => 'payments/bukti_pending.jpg',
                 'status' => 'pending',
             ]
         );
@@ -138,7 +138,7 @@ class UjiDeploySeeder extends Seeder
             ],
             [
                 'amount' => 1500000,
-                'proof_url'  => Storage::disk('public')->url('payments/bukti_failed.jpg'),
+                'proof_url'  => 'payments/bukti_failed.jpg',
                 'status' => 'failed',
             ]
         );
