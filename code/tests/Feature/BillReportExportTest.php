@@ -203,7 +203,9 @@ class BillReportExportTest extends TestCase
         );
     }
 
-    public function test_inactive_contracts_are_not_billed(): void
+    /* Riwayat sewa tetap terbaca setelah kontrak selesai: laporan memuat
+       bulan-bulan kontrak lampau, bukan hanya yang sedang aktif. */
+    public function test_finished_contracts_are_still_billed(): void
     {
         $owner = $this->owner();
         $activeUnit = $this->unit($owner, 'Kos Aktif');
@@ -215,7 +217,35 @@ class BillReportExportTest extends TestCase
         $content = implode("\n", $this->csvRows($this->download($owner)));
 
         $this->assertStringContainsString('Kos Aktif', $content);
-        $this->assertStringNotContainsString('Kos Selesai', $content);
+        $this->assertStringContainsString('Kos Selesai', $content);
+    }
+
+    public function test_pending_contracts_are_not_billed(): void
+    {
+        $owner = $this->owner();
+        $unit = $this->unit($owner, 'Kos Pengajuan');
+        [$user, $tenant] = $this->tenant();
+        $this->contract($unit, $tenant, '2026-09-01', '2027-02-28', 15000000, 'pending');
+
+        $content = implode("\n", $this->csvRows($this->download($owner)));
+
+        $this->assertStringNotContainsString('Kos Pengajuan', $content);
+    }
+
+    public function test_terminated_contract_bills_until_termination_date(): void
+    {
+        $owner = $this->owner();
+        $unit = $this->unit($owner, 'Kos Berhenti');
+        [$user, $tenant] = $this->tenant();
+        $contract = $this->contract($unit, $tenant, '2026-09-01', '2027-02-28', 15000000);
+        $contract->update(['status' => 'completed', 'ended_at' => '2026-10-15', 'end_reason' => 'berhenti_penyewa']);
+
+        $rows = $this->csvRows($this->download($user));
+        $content = implode("\n", $rows);
+
+        $this->assertStringContainsString('2026-09;Kos Berhenti', $content);
+        $this->assertStringContainsString('2026-10;Kos Berhenti', $content);
+        $this->assertStringNotContainsString('2026-11', $content);
     }
 
     public function test_formula_like_names_are_prefixed_with_quote(): void

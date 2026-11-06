@@ -320,7 +320,7 @@
                     "Contracts"
                 ],
                 "summary": "Update Contract Status",
-                "description": "Update contract status (e.g. active, cancelled, completed). Accessible by Owner.",
+                "description": "Update contract status. Closing an active contract before its end_date is an early termination: ended_at and end_reason become required, and end_note is required when the reason is \"lainnya\". Closing at or after end_date stores end_date and \"selesai_normal\". Reactivating clears all three. Accessible by Owner.",
                 "operationId": "deec88ded603a5d2d90d86d4106f9242",
                 "parameters": [
                     {
@@ -351,6 +351,31 @@
                                             "completed",
                                             "cancelled"
                                         ]
+                                    },
+                                    "ended_at": {
+                                        "description": "Tanggal berhenti; wajib saat penghentian dini dan harus di dalam masa sewa.",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-10-15",
+                                        "nullable": true
+                                    },
+                                    "end_reason": {
+                                        "description": "Wajib saat penghentian dini.",
+                                        "type": "string",
+                                        "example": "berhenti_penyewa",
+                                        "nullable": true,
+                                        "enum": [
+                                            "selesai_normal",
+                                            "berhenti_penyewa",
+                                            "pelanggaran",
+                                            "lainnya"
+                                        ]
+                                    },
+                                    "end_note": {
+                                        "description": "Wajib bila end_reason = lainnya.",
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 500
                                     }
                                 },
                                 "type": "object"
@@ -367,6 +392,9 @@
                     },
                     "404": {
                         "description": "Contract Not Found"
+                    },
+                    "422": {
+                        "description": "Validation Error"
                     }
                 },
                 "security": [

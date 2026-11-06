@@ -85,7 +85,10 @@ class PaymentController extends Controller
 
             $contracts = Contract::with(['unit.owner:id,name', 'payments'])
                 ->where('tenant_id', $tenant->id)
-                ->where('status', 'active')
+                /* Kontrak lampau tetap dilaporkan supaya riwayat sewa penyewa
+                   tidak lenyap saat pemilik menutupnya. Pengajuan yang belum
+                   pernah berjalan tidak punya tagihan. */
+                ->whereIn('status', ['active', 'completed', 'cancelled'])
                 ->orderBy('id')
                 ->get();
 
@@ -94,7 +97,7 @@ class PaymentController extends Controller
         } elseif ($user->role === 'owner') {
             $contracts = Contract::with(['unit', 'tenant', 'payments'])
                 ->whereHas('unit', fn ($q) => $q->where('owner_id', $user->id))
-                ->where('status', 'active')
+                ->whereIn('status', ['active', 'completed', 'cancelled'])
                 ->orderBy('id')
                 ->get();
 

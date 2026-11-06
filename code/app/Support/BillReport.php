@@ -47,9 +47,25 @@ class BillReport
      */
     public static function rows(Contract $contract, CarbonInterface $now): array
     {
+        /* Pengajuan yang ditolak tidak pernah berjalan (ADR 0002): `cancelled`
+           tanpa `ended_at` tidak punya satu bulan pun untuk ditagih. */
+        if ($contract->status === 'cancelled' && $contract->ended_at === null) {
+            return [];
+        }
+
+        $mulai = $contract->start_date->toDateString();
+        $selesai = $contract->end_date->toDateString();
+        /* Sewa yang dihentikan lebih awal berhenti ditagih pada tanggal
+           penghentian; `end_date` tetap tanggal yang disepakati. Biaya bulanan
+           tetap dihitung dari masa sewa yang disepakati — memotongnya akan
+           menaikkan harga per bulan. */
+        $sampai = $contract->ended_at && $contract->ended_at->lt($contract->end_date)
+            ? $contract->ended_at->toDateString()
+            : $selesai;
+
         $fee = self::monthly(
             (float) $contract->total_price,
-            self::months($contract->start_date->toDateString(), $contract->end_date->toDateString()),
+            self::months($mulai, $selesai),
         );
 
         $latest = [];
@@ -63,7 +79,7 @@ class BillReport
         $rows = [];
         $limit = Carbon::parse($now)->startOfMonth();
 
-        foreach (self::monthKeys($contract->start_date->toDateString(), $contract->end_date->toDateString()) as $key) {
+        foreach (self::monthKeys($mulai, $sampai) as $key) {
             if (Carbon::parse("{$key}-01")->gt($limit)) {
                 break;
             }
