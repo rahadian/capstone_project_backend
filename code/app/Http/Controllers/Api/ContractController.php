@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\Tenant;
 use App\Models\Unit;
+use App\Notifications\ContractStatusNotification;
 use App\Support\BillReport;
 use App\Support\Csv;
 use Illuminate\Http\Request;
@@ -220,6 +221,10 @@ class ContractController extends Controller
             'status'      => 'pending',
         ]);
 
+        if ($user->role === 'tenant') {
+            $unit->owner?->notify(new ContractStatusNotification('submitted', $contract->load('tenant')));
+        }
+
         return response()->json([
             'message'  => $user->role === 'owner'
                 ? 'Kontrak berhasil dibuat.'
@@ -379,6 +384,8 @@ class ContractController extends Controller
             $nilai += ['ended_at' => null, 'end_reason' => null, 'end_note' => null];
         }
 
+        $statusLama = $contract->status;
+
         DB::transaction(function () use ($contract, $nilai, $validated) {
             $contract->update($nilai);
 
@@ -391,6 +398,14 @@ class ContractController extends Controller
                 $contract->unit->update(['status' => 'available']);
             }
         });
+
+        /* Keputusan pemilik diteruskan ke penyewa: pengaktifan adalah persetujuan,
+           sedangkan pembatalan kontrak yang masih pending adalah penolakan (ADR 0002). */
+        if ($validated['status'] === 'active') {
+            $contract->tenant?->user?->notify(new ContractStatusNotification('approved', $contract->load('unit')));
+        } elseif ($validated['status'] === 'cancelled' && $statusLama === 'pending') {
+            $contract->tenant?->user?->notify(new ContractStatusNotification('rejected', $contract->load('unit')));
+        }
 
         return response()->json([
             'message'  => 'Status kontrak berhasil diperbarui.',
