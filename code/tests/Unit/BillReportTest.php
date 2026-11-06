@@ -70,7 +70,7 @@ class BillReportTest extends TestCase
 
         $this->assertSame('Ditolak', $rows[0]['status']);
         $this->assertSame('', $rows[0]['proof']);
-        $this->assertSame('Belum Bayar', $rows[1]['status']);
+        $this->assertSame('Tagihan Belum Dibayar', $rows[1]['status']);
         $this->assertSame(2500000, $rows[1]['amount']);
         $this->assertSame('', $rows[1]['uploaded']);
     }

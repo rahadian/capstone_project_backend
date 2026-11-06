@@ -92,8 +92,8 @@ class BillReport
                     ? (int) round((float) $payment->amount)
                     : $fee,
                 'status' => $payment
-                    ? (self::LABEL_STATUS[$payment->status] ?? 'Belum Bayar')
-                    : 'Belum Bayar',
+                    ? (self::LABEL_STATUS[$payment->status] ?? 'Tagihan Belum Dibayar')
+                    : 'Tagihan Belum Dibayar',
                 'proof' => $payment && $payment->proof_url
                     ? basename($payment->proof_url)
                     : '',

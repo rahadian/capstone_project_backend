@@ -112,7 +112,7 @@ class BillReportExportTest extends TestCase
         $this->assertSame([
             'Bulan;Unit;Pemilik;Jumlah;Status;Bukti;Diunggah',
             '2026-09;Kos Uji;Pak Wahyu;2500000;Lunas;bukti-sep.jpg;2026-09-05 09:00',
-            '2026-10;Kos Uji;Pak Wahyu;2500000;Belum Bayar;;',
+            '2026-10;Kos Uji;Pak Wahyu;2500000;Tagihan Belum Dibayar;;',
         ], $this->csvRows($response));
     }
 
@@ -257,7 +257,7 @@ class BillReportExportTest extends TestCase
 
         $rows = $this->csvRows($this->download($owner));
 
-        $this->assertStringContainsString("'=1+1;'@SUM(A1);2500000;Belum Bayar;;", $rows[1]);
+        $this->assertStringContainsString("'=1+1;'@SUM(A1);2500000;Tagihan Belum Dibayar;;", $rows[1]);
     }
 
     public function test_owner_receives_all_rows_without_pagination(): void
