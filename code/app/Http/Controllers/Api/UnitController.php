@@ -398,6 +398,11 @@ class UnitController extends Controller
             return response()->json(['message' => 'Unauthorized access'], 403);
         }
 
+        // The photo lives outside the row: delete the file with it.
+        if ($oldPath = $unit->getRawOriginal('image')) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
         $unit->delete();
 
         return response()->json([

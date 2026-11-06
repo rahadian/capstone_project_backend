@@ -61,6 +61,40 @@ class TenantController extends Controller
         return response()->json(['data' => $tenants], 200);
     }
 
+    #[OA\Get(
+        path: '/api/tenants/{id}',
+        summary: 'Get Tenant Detail',
+        description: 'Accessible to the owner that manages the tenant.',
+        tags: ['Tenants'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Tenant Detail Fetched Successfully'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Tenant Not Found')
+        ]
+    )]
+    public function show(Request $request, Tenant $tenant): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'owner') {
+            return response()->json(['message' => 'Unauthorized access'], 403);
+        }
+
+        $dikelola = $this->scopeFor($user)->whereKey($tenant->id)->exists();
+
+        if (! $dikelola) {
+            return response()->json(['message' => 'Unauthorized access'], 403);
+        }
+
+        return response()->json([
+            'data' => $this->row($tenant->loadCount('contracts')),
+        ], 200);
+    }
+
     #[OA\Post(
         path: '/api/tenants',
         summary: 'Create Tenant Without Account',
