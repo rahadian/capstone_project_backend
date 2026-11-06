@@ -11,7 +11,6 @@ use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 Use App\Models\User;
 Use DB;
-Use Storage;
 Use App\Models\Tenant;
 use OpenApi\Attributes as OA;
 
@@ -72,14 +71,14 @@ class AuthController extends Controller
             ]);
 
             if ($validatedData['role'] === 'tenant') {
-                $idCardUrl = null;
+                $idCardPath = null;
                 if (!$request->hasFile('id_card')) {
                     throw ValidationException::withMessages([
                         'id_card' => ['The ID Card is required for tenant role.'],
                     ]);
                 }else{
-                    $path = $request->file('id_card')->store('id_cards', 'public');
-                    $idCardUrl = Storage::disk('public')->url($path);
+                    // id_card_url keeps a relative path; the model accessor builds the absolute URL.
+                    $idCardPath = $request->file('id_card')->store('id_cards', 'public');
                 }
 
                 $ktpData = $request->filled('ktp_data_json')
@@ -90,7 +89,7 @@ class AuthController extends Controller
                     'user_id' => $newUser->id,
                     'name'    => $validatedData['name'],
                     'phone'   => $validatedData['phone'] ?? null,
-                    'id_card_url' => $idCardUrl,
+                    'id_card_url' => $idCardPath,
                     'ktp_data_json' => $ktpData,
                     'ktp_status' => $ktpData ? 'pending' : 'unverified',
                 ]);

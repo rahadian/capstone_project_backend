@@ -107,6 +107,68 @@ class NusantaraBookingTest extends TestCase
         ]);
     }
 
+    /* The `image` column keeps the path on the `public` disk; the model accessor
+       builds the absolute URL on read. Storing an absolute URL breaks the image
+       every time APP_URL changes, because the host at write time is baked in. */
+    public function test_unit_photo_is_stored_relative_and_served_as_absolute_url()
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+
+        $response = $this->actingAs($owner, 'api')
+            ->postJson('/api/units', [
+                'name'    => 'Kos Foto Relatif',
+                'type'    => 'Kamar Kos',
+                'address' => 'Jl. Contoh Alamat No. 12, Jakarta',
+                'price'   => 1500000,
+                'image'   => UploadedFile::fake()->image('foto.jpg', 400, 300),
+            ]);
+
+        $response->assertStatus(201);
+
+        $unit = Unit::where('name', 'Kos Foto Relatif')->firstOrFail();
+        $tersimpan = $unit->getRawOriginal('image');
+
+        $this->assertStringStartsWith('unit_image/', $tersimpan);
+        $this->assertStringNotContainsString('://', $tersimpan);
+        Storage::disk('public')->assertExists($tersimpan);
+        $this->assertSame(Storage::disk('public')->url($tersimpan), $unit->image);
+    }
+
+    /* Replacing the photo deletes the old file; `getRawOriginal` is used because
+       the `image` accessor already returns a URL, not a disk path. */
+    public function test_replacing_unit_photo_deletes_the_old_file()
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+
+        $this->actingAs($owner, 'api')
+            ->postJson('/api/units', [
+                'name'    => 'Kos Ganti Foto',
+                'type'    => 'Kamar Kos',
+                'address' => 'Jl. Contoh Alamat No. 13, Jakarta',
+                'price'   => 1500000,
+                'image'   => UploadedFile::fake()->image('lama.jpg', 400, 300),
+            ])->assertStatus(201);
+
+        $unit = Unit::where('name', 'Kos Ganti Foto')->firstOrFail();
+        $lama = $unit->getRawOriginal('image');
+
+        $this->actingAs($owner, 'api')
+            ->put("/api/units/{$unit->id}", [
+                'name'    => 'Kos Ganti Foto',
+                'type'    => 'Kamar Kos',
+                'address' => 'Jl. Contoh Alamat No. 13, Jakarta',
+                'price'   => 1500000,
+                'status'  => 'available',
+                'image'   => UploadedFile::fake()->image('baru.jpg', 400, 300),
+            ])->assertStatus(200);
+
+        $baru = $unit->fresh()->getRawOriginal('image');
+
+        $this->assertNotSame($lama, $baru);
+        Storage::disk('public')->assertMissing($lama);
+        Storage::disk('public')->assertExists($baru);
+    }
+
     public function test_tenant_can_propose_contract_and_owner_can_activate_it()
     {
         // 1. Setup Data

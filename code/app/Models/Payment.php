@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Payment extends Model
 {
@@ -22,6 +23,12 @@ class Payment extends Model
     protected $casts = [
         'amount' => 'decimal:2',
     ];
+
+    /* `proof_url` keeps the path on the `public` disk; the absolute URL is built on read. */
+    public function getProofUrlAttribute(?string $value): ?string
+    {
+        return $value ? Storage::disk('public')->url($value) : null;
+    }
 
     public function contract(): BelongsTo
     {

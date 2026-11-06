@@ -92,10 +92,26 @@ class ContractReportExportTest extends TestCase
         $rows = $this->csvRows($response);
 
         $this->assertSame([
-            'ID;Penyewa;Unit;Pemilik;Mulai;Selesai;Durasi;Harga per Bulan;Nilai Kontrak;Status',
-            "{$contract->id};Siti Sarah;Kos Uji;Pak Wahyu;2026-09-01;2027-02-28;6 bulan;2500000;15000000;Aktif",
+            'ID;Penyewa;Unit;Pemilik;Mulai;Selesai;Durasi;Harga per Bulan;Nilai Kontrak;Status;Berakhir Pada;Alasan',
+            "{$contract->id};Siti Sarah;Kos Uji;Pak Wahyu;2026-09-01;2027-02-28;6 bulan;2500000;15000000;Aktif;;",
         ], $rows);
         $this->assertStringNotContainsString('KTP', implode("\n", $rows));
+    }
+
+    /* Kontrak yang berhenti lebih awal memuat tanggal berhenti dan alasannya;
+       kontrak lama tanpa jejak membiarkan kedua sel kosong. */
+    public function test_termination_columns_report_date_and_reason(): void
+    {
+        $owner = $this->owner();
+        $unit = $this->unit($owner);
+        [, $tenant] = $this->tenant();
+        $contract = $this->contract($unit, $tenant, '2026-09-01', '2027-02-28', 15000000);
+        $contract->update(['status' => 'completed', 'ended_at' => '2026-10-15', 'end_reason' => 'berhenti_penyewa']);
+
+        $rows = $this->csvRows($this->download($owner));
+
+        $this->assertStringContainsString('Status;Berakhir Pada;Alasan', $rows[0]);
+        $this->assertStringEndsWith(';Selesai;2026-10-15;Berhenti penyewa', $rows[1]);
     }
 
     public function test_all_contract_statuses_included(): void
@@ -110,7 +126,9 @@ class ContractReportExportTest extends TestCase
 
         $content = implode("\n", $this->csvRows($this->download($owner)));
 
-        foreach (['Menunggu', 'Aktif', 'Selesai', 'Dibatalkan'] as $label) {
+        /* Kontrak `cancelled` di sini tidak punya `ended_at`, jadi ini pengajuan
+           yang ditolak dan kolom statusnya berbunyi "Ditolak" (ADR 0002). */
+        foreach (['Menunggu', 'Aktif', 'Selesai', 'Ditolak'] as $label) {
             $this->assertStringContainsString($label, $content);
         }
     }

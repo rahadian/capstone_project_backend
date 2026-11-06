@@ -14,6 +14,15 @@ use OpenApi\Attributes as OA;
 
 class ContractController extends Controller
 {
+    /* Alasan penghentian yang diterima. Kontrak lama tidak punya nilainya, jadi
+       kolom laporan dibiarkan kosong untuk baris seperti itu. */
+    private const END_REASONS = [
+        'selesai_normal' => 'Selesai normal',
+        'berhenti_penyewa' => 'Berhenti penyewa',
+        'pelanggaran' => 'Pelanggaran',
+        'lainnya' => 'Lainnya',
+    ];
+
     #[OA\Get(
         path: '/api/contracts',
         summary: 'Get Contract List',
@@ -118,13 +127,19 @@ class ContractController extends Controller
                 "{$months} bulan",
                 BillReport::monthly((float) $contract->total_price, $months),
                 (int) round((float) $contract->total_price),
-                $labels[$contract->status] ?? $contract->status,
+                /* `cancelled` tanpa `ended_at` adalah pengajuan yang ditolak
+                   (ADR 0002), bukan sewa yang berhenti. */
+                $contract->status === 'cancelled' && $contract->ended_at === null
+                    ? 'Ditolak'
+                    : ($labels[$contract->status] ?? $contract->status),
+                $contract->ended_at?->format('Y-m-d') ?? '',
+                $contract->end_reason ? (self::END_REASONS[$contract->end_reason] ?? $contract->end_reason) : '',
             ];
         });
 
         return Csv::download(
             'laporan-kontrak-'.now()->format('Ymd').'.csv',
-            ['ID', 'Penyewa', 'Unit', 'Pemilik', 'Mulai', 'Selesai', 'Durasi', 'Harga per Bulan', 'Nilai Kontrak', 'Status'],
+            ['ID', 'Penyewa', 'Unit', 'Pemilik', 'Mulai', 'Selesai', 'Durasi', 'Harga per Bulan', 'Nilai Kontrak', 'Status', 'Berakhir Pada', 'Alasan'],
             $rows,
         );
     }
@@ -251,7 +266,7 @@ class ContractController extends Controller
     #[OA\Put(
         path: '/api/contracts/{id}',
         summary: 'Update Contract Status',
-        description: 'Update contract status (e.g. active, cancelled, completed). Accessible by Owner.',
+        description: 'Update contract status. Closing an active contract before its end_date is an early termination: ended_at and end_reason become required, and end_note is required when the reason is "lainnya". Closing at or after end_date stores end_date and "selesai_normal". Reactivating clears all three. Accessible by Owner.',
         security: [['bearerAuth' => []]],
         tags: ['Contracts'],
         parameters: [
@@ -262,14 +277,18 @@ class ContractController extends Controller
             content: new OA\JsonContent(
                 required: ['status'],
                 properties: [
-                    new OA\Property(property: 'status', type: 'string', enum: ['pending', 'active', 'completed', 'cancelled'], example: 'active')
+                    new OA\Property(property: 'status', type: 'string', enum: ['pending', 'active', 'completed', 'cancelled'], example: 'active'),
+                    new OA\Property(property: 'ended_at', type: 'string', format: 'date', nullable: true, description: 'Tanggal berhenti; wajib saat penghentian dini dan harus di dalam masa sewa.', example: '2026-10-15'),
+                    new OA\Property(property: 'end_reason', type: 'string', nullable: true, enum: ['selesai_normal', 'berhenti_penyewa', 'pelanggaran', 'lainnya'], description: 'Wajib saat penghentian dini.', example: 'berhenti_penyewa'),
+                    new OA\Property(property: 'end_note', type: 'string', nullable: true, maxLength: 500, description: 'Wajib bila end_reason = lainnya.')
                 ]
             )
         ),
         responses: [
             new OA\Response(response: 200, description: 'Contract Status Updated'),
             new OA\Response(response: 403, description: 'Forbidden'),
-            new OA\Response(response: 404, description: 'Contract Not Found')
+            new OA\Response(response: 404, description: 'Contract Not Found'),
+            new OA\Response(response: 422, description: 'Validation Error')
         ]
     )]
     public function update(Request $request, string $id)
@@ -289,9 +308,48 @@ class ContractController extends Controller
             return response()->json(['message' => 'Unauthorized access'], 403);
         }
 
+        /* Pesan Indonesia, bukan bawaan Laravel: layar pemilik menampilkan
+           `message` dari 422 apa adanya, dan handler mock memakai teks yang
+           sama supaya tes tidak lolos atas kalimat yang tidak pernah muncul. */
+        $pesan = [
+            'status.required' => 'Status kontrak wajib diisi.',
+            'status.in' => 'Status kontrak tidak dikenal.',
+            'ended_at.required' => 'Tanggal penghentian wajib diisi.',
+            'ended_at.date' => 'Tanggal penghentian tidak sah.',
+            'ended_at.after_or_equal' => 'Tanggal penghentian tidak boleh sebelum masa sewa.',
+            'ended_at.before_or_equal' => 'Tanggal penghentian tidak boleh sesudah masa sewa.',
+            'end_reason.required' => 'Alasan penghentian wajib dipilih.',
+            'end_reason.in' => 'Alasan penghentian tidak dikenal.',
+            'end_note.required_if' => 'Catatan wajib diisi bila alasannya Lainnya.',
+            'end_note.max' => 'Catatan maksimal 500 karakter.',
+        ];
+
         $validated = $request->validate([
             'status' => 'required|string|in:pending,active,completed,cancelled',
-        ]);
+            'ended_at' => 'nullable|date',
+            'end_reason' => 'nullable|string|in:'.implode(',', array_keys(self::END_REASONS)),
+            'end_note' => 'nullable|string|max:500',
+        ], $pesan);
+
+        $menutup = in_array($validated['status'], ['completed', 'cancelled'], true);
+        $berjalan = $contract->status === 'active';
+        /* Ditutup sebelum tanggal selesai berarti penghentian dini. Kontrak yang
+           ditutup pada atau setelah tanggal selesainya adalah penyelesaian biasa
+           dan tidak perlu alasan. */
+        $dini = $menutup && $berjalan && $contract->end_date->isAfter(today());
+
+        if ($dini) {
+            $request->validate([
+                'ended_at' => [
+                    'required',
+                    'date',
+                    'after_or_equal:'.$contract->start_date->toDateString(),
+                    'before_or_equal:'.$contract->end_date->toDateString(),
+                ],
+                'end_reason' => 'required|string|in:'.implode(',', array_keys(self::END_REASONS)),
+                'end_note' => 'required_if:end_reason,lainnya|nullable|string|max:500',
+            ], $pesan);
+        }
 
         if ($validated['status'] === 'active' && $contract->unit->hasOverlap(
             $contract->start_date->toDateString(),
@@ -301,8 +359,28 @@ class ContractController extends Controller
             return response()->json(['message' => 'Tanggal yang dipilih sudah terisi atau diblokir.'], 422);
         }
 
-        DB::transaction(function () use ($contract, $validated) {
-            $contract->update(['status' => $validated['status']]);
+        $nilai = ['status' => $validated['status']];
+
+        if ($dini) {
+            $nilai += [
+                'ended_at' => $request->input('ended_at'),
+                'end_reason' => $request->input('end_reason'),
+                'end_note' => $request->input('end_note'),
+            ];
+        } elseif ($menutup && $berjalan) {
+            $nilai += [
+                'ended_at' => $contract->end_date->toDateString(),
+                'end_reason' => 'selesai_normal',
+                'end_note' => null,
+            ];
+        } elseif ($validated['status'] === 'active') {
+            /* Mengaktifkan kembali kontrak membatalkan jejak penghentian supaya
+               alasan lama tidak menempel pada sewa yang berjalan lagi. */
+            $nilai += ['ended_at' => null, 'end_reason' => null, 'end_note' => null];
+        }
+
+        DB::transaction(function () use ($contract, $nilai, $validated) {
+            $contract->update($nilai);
 
             // Unit hanya ditandai terisi bila masa sewa sudah berjalan
             if ($validated['status'] === 'active' && $contract->start_date->lte(today())) {

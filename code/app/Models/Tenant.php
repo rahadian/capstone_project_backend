@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Tenant extends Model
 {
@@ -24,6 +25,12 @@ class Tenant extends Model
     protected $casts = [
         'ktp_data_json' => 'array',
     ];
+
+    /* `id_card_url` keeps the path on the `public` disk; the absolute URL is built on read. */
+    public function getIdCardUrlAttribute(?string $value): ?string
+    {
+        return $value ? Storage::disk('public')->url($value) : null;
+    }
 
     public function user(): BelongsTo
     {

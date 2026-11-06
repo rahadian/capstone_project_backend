@@ -97,6 +97,37 @@ class BillReportTest extends TestCase
         $this->assertSame(['2026-09', '2026-10'], $months);
     }
 
+    /* Sewa yang dihentikan lebih awal berhenti ditagih pada tanggal penghentian,
+       bukan pada tanggal selesai yang disepakati. */
+    public function test_stops_at_termination_date(): void
+    {
+        $contract = $this->contract('2026-09-01', '2027-02-28');
+        $contract->ended_at = Carbon::parse('2026-10-15');
+
+        $rows = BillReport::rows($contract, Carbon::parse('2027-04-10'));
+
+        $this->assertSame(['2026-09', '2026-10'], array_column($rows, 'month'));
+        $this->assertSame([2500000, 2500000], array_column($rows, 'amount'));
+    }
+
+    /* Pengajuan yang ditolak tidak pernah berjalan, jadi tidak punya bulan
+       ditagih. Pembedanya ada-tidaknya `ended_at`, bukan statusnya — keduanya
+       sama-sama `cancelled` (ADR 0002). */
+    public function test_rejected_proposal_bills_nothing(): void
+    {
+        $contract = $this->contract('2026-09-01', '2027-02-28');
+        $contract->status = 'cancelled';
+
+        $this->assertSame([], BillReport::rows($contract, Carbon::parse('2027-04-10')));
+
+        $contract->ended_at = Carbon::parse('2026-10-15');
+
+        $this->assertSame(
+            ['2026-09', '2026-10'],
+            array_column(BillReport::rows($contract, Carbon::parse('2027-04-10')), 'month'),
+        );
+    }
+
     public function test_month_keys_stop_at_tail_month(): void
     {
         $this->assertSame(

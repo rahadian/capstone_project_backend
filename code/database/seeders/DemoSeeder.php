@@ -331,7 +331,7 @@ class DemoSeeder extends Seeder
                     [
                         'amount' => $unit->price,
                         'status' => $paymentStatus,
-                        'proof_url' => "bukti-$month-$slug.jpg",
+                        'proof_url' => "payments/bukti-$month-$slug.jpg",
                         'recorded_by' => $offset === $startOffset && in_array($slug, self::OWNER_RECORDED_UNITS, true)
                             ? $unit->owner_id
                             : null,
@@ -395,7 +395,8 @@ class DemoSeeder extends Seeder
                 Storage::disk('public')->put($path, $response->body());
             }
 
-            $images[$slug] = Storage::disk('public')->url($path);
+            // Store the relative path; the Unit accessor builds the absolute URL on read.
+            $images[$slug] = $path;
         }
 
         return $images;

@@ -9,7 +9,6 @@ use App\Support\BillReport;
 use App\Support\Csv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use OpenApi\Attributes as OA;
 
 class PaymentController extends Controller
@@ -86,7 +85,10 @@ class PaymentController extends Controller
 
             $contracts = Contract::with(['unit.owner:id,name', 'payments'])
                 ->where('tenant_id', $tenant->id)
-                ->where('status', 'active')
+                /* Kontrak lampau tetap dilaporkan supaya riwayat sewa penyewa
+                   tidak lenyap saat pemilik menutupnya. Pengajuan yang belum
+                   pernah berjalan tidak punya tagihan. */
+                ->whereIn('status', ['active', 'completed', 'cancelled'])
                 ->orderBy('id')
                 ->get();
 
@@ -95,7 +97,7 @@ class PaymentController extends Controller
         } elseif ($user->role === 'owner') {
             $contracts = Contract::with(['unit', 'tenant', 'payments'])
                 ->whereHas('unit', fn ($q) => $q->where('owner_id', $user->id))
-                ->where('status', 'active')
+                ->whereIn('status', ['active', 'completed', 'cancelled'])
                 ->orderBy('id')
                 ->get();
 
@@ -198,15 +200,15 @@ class PaymentController extends Controller
         }
 
         $payment = DB::transaction(function () use ($request, $validated) {
+            // proof_url keeps a relative path; the model accessor builds the absolute URL.
             $path = $request->file('proof')->store('proofs', 'public');
-            $proofUrl = Storage::disk('public')->url($path);
 
             return Payment::create([
                 'contract_id' => $validated['contract_id'],
                 'month' => $validated['month'],
                 'amount' => $validated['amount'],
                 'status' => 'pending',
-                'proof_url' => $proofUrl,
+                'proof_url' => $path,
             ]);
         });
 
